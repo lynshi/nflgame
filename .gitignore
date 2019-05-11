@@ -16,3 +16,5 @@ ve
 .pytest_cache
 .idea
 *.bak
+__pycache__
+venv
