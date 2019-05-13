@@ -3,11 +3,11 @@ import nflgame
 
 
 def build_db():
-    season = 200
+    season = 2009
     while True:
         print('finding ' + str(season))
         games = nflgame.games(season)
-        print('found ' + str(season))
+        print(len(games))
         season += 1
 
 

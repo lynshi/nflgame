@@ -99,7 +99,7 @@ def profile_url(gsis_id):
     resp = requests.head(urls['gsis_profile'], params={'id':gsis_id})
     if resp.status_code != 301:
         return None
-    loc = resp['location']
+    loc = resp.headers['location']
     if not loc.startswith('http://'):
         loc = 'http://www.nfl.com' + loc
     return loc
@@ -364,7 +364,6 @@ def run():
             year = args.year
         if args.week is not None:
             week = args.week
-
         eprint('Loading games for %s %d week %d' % (phase, year, week))
         games = nflgame.games(year, week, kind=phase)
         players = dict(players_from_games(metas, games))
@@ -455,13 +454,14 @@ def run():
 
         def fetch(t):
             gid, purl = t
-            resp, content = new_http().request(purl, 'GET')
-            if resp['status'] != '200':
-                if resp['status'] == '404':
+            # resp, content = new_http().request(purl, 'GET')
+            resp = requests.get(purl)
+            if resp.status_code != '200':
+                if resp.status_code == '404':
                     return gid, purl, False
                 else:
                     return gid, purl, None
-            return gid, purl, content
+            return gid, purl, resp.content
         for i, (gid, purl, html) in enumerate(pool.imap(fetch, gids), 1):
             progress(i, len(gids))
             more_meta = meta_from_profile_html(html)

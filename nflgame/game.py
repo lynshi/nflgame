@@ -365,7 +365,9 @@ class Game (object):
         if fpath is None:
             fpath = _jsonf % self.eid
         try:
-            print(self.rawData, file=gzip.open(fpath, 'w+'))
+            with gzip.open(fpath, 'w+') as outfile:
+                outfile.write(self.rawData)
+            # print(self.rawData, file=gzip.open(fpath, 'w+'))
         except IOError:
             print("Could not cache JSON data. Please " \
                                  "make '%s' writable." \
