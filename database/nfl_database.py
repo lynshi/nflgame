@@ -10,7 +10,6 @@ class NFLDatabase:
         self.db_file_name = db_file_name
         self.conn = sql.connect(self.db_file_name)
         self.cursor = self.conn.cursor()
-        self._create_players_table()
 
     def close(self):
         """
@@ -36,7 +35,7 @@ class NFLDatabase:
         """
         self.conn.commit()
 
-    def _create_players_table(self):
+    def create_players_table(self):
         self.cursor.execute("""
             CREATE TABLE Players (
                 player_id CHAR(10) PRIMARY KEY NOT NULL, 

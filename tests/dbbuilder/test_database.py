@@ -14,6 +14,7 @@ class TestDatabase(unittest.TestCase):
                           'CREATE TABLE Failure')
 
     def test_player_table_creation(self):
+        self.db.create_players_table()
         res = self.db.cursor.execute('PRAGMA table_info(Players)').fetchall()
         expected_columns = {
             'player_id': ('CHAR(10)', 1, None, 1),
