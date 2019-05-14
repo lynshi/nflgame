@@ -354,4 +354,40 @@ class TestDatabase(unittest.TestCase):
             self.assertTrue(found)
 
     def test_insert_one_team(self):
-        pass
+        game = [
+            "2015102500",
+            {
+                "away": "BUF",
+                "day": 25,
+                "eid": "2015102500",
+                "gamekey": "56595",
+                "home": "JAC",
+                "meridiem": "AM",
+                "month": 10,
+                "season_type": "REG",
+                "time": "9:30",
+                "wday": "Sun",
+                "week": 7,
+                "year": 2015
+            }
+        ]
+
+        teams = [['BUF', 'Buffalo', 'Bills', 'Buffalo Bills'],
+                 ['JAC', 'Jacksonville', 'Jaguars', 'Jacksonville Jaguars']]
+        self.db.insert_teams(teams)
+        self.db.insert_games(game)
+
+        res = self.db.cursor.execute('PRAGMA table_info(Games)').fetchall()
+        columns = [col[1] for col in res]
+
+        res = self.db.cursor.execute("SELECT * FROM Games").fetchall()
+        self.assertEqual(len(res), 1)
+
+        row = res[0]
+        for idx, col in enumerate(columns):
+            if col not in game[1]:
+                self.assertEqual(col, 'meridiem')
+                self.assertIsNone((row[idx]))
+                continue
+
+            self.assertEqual(row[idx], game[1][col])
