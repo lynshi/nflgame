@@ -1,0 +1,11 @@
+dist: xenial
+language: python
+python:
+- '3.7'
+install:
+- pip3 install coveralls
+- python setup.py install
+script:
+- coverage run --source nfldatabase -m unittest discover --start-directory test
+after_success:
+- coveralls
