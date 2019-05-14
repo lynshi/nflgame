@@ -75,7 +75,8 @@ class NFLDatabase:
                 team VARCHAR(3) PRIMARY KEY NOT NULL,
                 city VARCHAR(50) NOT NULL,
                 team_name VARCHAR(50) NOT NULL,
-                full_name VARCHAR(50) NOT NULL
+                full_name VARCHAR(50) NOT NULL,
+                alt_abbrev VARCHAR(3)
             )
         """)
 
@@ -142,14 +143,16 @@ class NFLDatabase:
 
     def insert_teams(self, teams):
         """
-        Insert team data from players into the Teams table. If teams is a
+        Insert team data from teams into the Teams table. If teams is a
         single item, it is converted to a list automatically.
 
         :param teams: list of team data of the format
-            [[Abbreviation, City, Team Name, Full Name],...]
+            [[Abbreviation, City, Team Name, Full Name
+                (, Alternatve Abbreviation)],...]
             e.g. [[NYG, New York G, Giants, New York Giants],
-                  [CLE, Cleveland, Browns, Cleveland Browns]]
-            Additional items in the list are allowed but only the first 4 are
+                  [CLE, Cleveland, Browns, Cleveland Browns],
+                  [LA, Los Angeles, Rams, Los Angeles Rams, LAR]]
+            Additional items in the list are allowed but only the first 5 are
             used.
         :return: None
         """
@@ -163,11 +166,48 @@ class NFLDatabase:
         query = """INSERT INTO Teams Values """
         params = []
         for t in teams:
-            params += t[:4]
+            if len(t) > 4:
+                query += '(?,?,?,?,?), '
+                params += t[:5]
+            else:
+                query += '(?,?,?,?,?), '
+                params += t + [t[0]]
         params = tuple(params)
 
-        row_placeholder = '(?,?,?,?), '
-        query += row_placeholder * len(teams)
+        self.cursor.execute(query[:-2], params)
+        self.commit()
+
+    def insert_games(self, games):
+        """
+        Insert game schedule data from games into the Games table. If games is a
+        single item, it is converted to a list automatically.
+
+        :param games: list of games following the format in
+            nflgame/schedule.json
+        :return: None
+        """
+
+        if (isinstance(games, list) is False
+            or isinstance(games[0], list) is False ) \
+                and (isinstance(games, tuple) is False
+                     or isinstance(games[0], tuple) is False):
+            games = [games]
+
+        query = """INSERT INTO Games Values """
+        params = []
+        attributes = ['away', 'day', 'eid', 'gamekey', 'home', 'season_type',
+                      'time', 'meridiem', 'wday', 'week', 'year']
+        for g in games:
+            g = g[1]
+            for attr in attributes:
+                if attr == 'meridiem':
+                    params.append(g.get('meridiem', 'PM'))
+                    continue
+                params.append(g[attr])
+        params = tuple(params)
+
+        row_placeholder = '(' + '?,' * (len(attributes) - 1) + '?), '
+        query += row_placeholder * len(games)
 
         self.cursor.execute(query[:-2], params)
         self.commit()

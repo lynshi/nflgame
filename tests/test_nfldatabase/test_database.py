@@ -53,7 +53,8 @@ class TestDatabase(unittest.TestCase):
             'team': ('VARCHAR(3)', 1, None, 1),
             'city': ('VARCHAR(50)', 1, None, 0),
             'team_name': ('VARCHAR(50)', 1, None, 0),
-            'full_name': ('VARCHAR(50)', 1, None, 0)
+            'full_name': ('VARCHAR(50)', 1, None, 0),
+            'alt_abbrev': ('VARCHAR(3)', 0, None, 0)
         }
 
         for col in res:
@@ -244,8 +245,9 @@ class TestDatabase(unittest.TestCase):
 
             for team in nflgame.teams:
                 if team[0] == row[0]:
+                    found = [team[0]] if len(team) == 4 else []
+                    self.assertListEqual(list(row), team + found)
                     found = True
-                    self.assertListEqual(list(row), team[:4])
                     break
 
             self.assertTrue(found)
@@ -261,7 +263,88 @@ class TestDatabase(unittest.TestCase):
         for team in nflgame.teams:
             if team[0] == res[0]:
                 found = True
-                self.assertListEqual(list(res), team[:4])
+                self.assertListEqual(list(res), team + [team[0]])
                 break
 
         self.assertTrue(found)
+
+    def test_games_insertion(self):
+        games = [
+            [
+                "2015102500",
+                {
+                    "away": "BUF",
+                    "day": 25,
+                    "eid": "2015102500",
+                    "gamekey": "56595",
+                    "home": "JAC",
+                    "meridiem": "AM",
+                    "month": 10,
+                    "season_type": "REG",
+                    "time": "9:30",
+                    "wday": "Sun",
+                    "week": 7,
+                    "year": 2015
+                }
+            ],
+            [
+                "2015102501",
+                {
+                    "away": "CLE",
+                    "day": 25,
+                    "eid": "2015102501",
+                    "gamekey": "56601",
+                    "home": "STL",
+                    "meridiem": "PM",
+                    "month": 10,
+                    "season_type": "REG",
+                    "time": "1:00",
+                    "wday": "Sun",
+                    "week": 7,
+                    "year": 2015
+                }
+            ],
+            [
+                "2015102502",
+                {
+                    "away": "HOU",
+                    "day": 25,
+                    "eid": "2015102502",
+                    "gamekey": "56599",
+                    "home": "MIA",
+                    "meridiem": "PM",
+                    "month": 10,
+                    "season_type": "REG",
+                    "time": "1:00",
+                    "wday": "Sun",
+                    "week": 7,
+                    "year": 2015
+                }
+            ]
+        ]
+
+        teams = [['BUF', 'Buffalo', 'Bills', 'Buffalo Bills'],
+                 ['JAC', 'Jacksonville', 'Jaguars', 'Jacksonville Jaguars'],
+                 ['CLE', 'Cleveland', 'Browns', 'Cleveland Browns'],
+                 ['STL', 'St. Louis', 'Rams', 'St. Louis Rams'],
+                 ['HOU', 'Houston', 'Texans', 'Houstaon Texans'],
+                 ['MIA', 'Miami', 'Dolphins', 'Miami Dolphins']]
+        self.db.insert_teams(teams)
+        self.db.insert_games(games)
+
+        res = self.db.cursor.execute('PRAGMA table_info(Games)').fetchall()
+        columns = [col[1] for col in res]
+
+        res = self.db.cursor.execute("SELECT * FROM Games").fetchall()
+        self.assertEqual(len(res), len(games))
+
+        for row in res:
+            found = False
+            for game in games:
+                if game[0] == row[columns.index('eid')]:
+                    for idx, col in enumerate(columns):
+                        self.assertEqual(row[idx], game[1][col])
+                    found = True
+                    break
+
+            self.assertTrue(found)
