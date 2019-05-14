@@ -142,22 +142,49 @@ class TestDatabase(unittest.TestCase):
                 "years_pro": 2
             }
         }
-        players = []
+        players = {}
         for pid in test_set:
-            players.append(Player(test_set[pid]))
+            players[pid] = Player(test_set[pid])
 
-        self.db.insert_players(players)
-        inserted = self.db.cursor.execute("SELECT * FROM Players")
         res = self.db.cursor.execute('PRAGMA table_info(Players)').fetchall()
-
         columns = [col[1] for col in res]
+
+        self.db.insert_players(list(players.values()))
+        inserted = self.db.cursor.execute("SELECT * FROM Players")
 
         for res in inserted:
             self.assertIn(res[0], test_set)
-            to_match = test_set[res[0]]
+            player = players[res[0]]
             for idx, name in enumerate(columns):
-                if name not in to_match:
-                    self.assertTrue(res[idx] == '' or res[idx] == 0)
-                    continue
+                self.assertEqual(res[idx], getattr(player, name))
 
-                self.assertEqual(res[idx], to_match[name])
+    def test_single_player_insertion(self):
+        data = {
+            "birthdate": "2/9/1997",
+            "college": "Penn State",
+            "first_name": "Saquon",
+            "full_name": "Saquon Barkley",
+            "gsis_id": "00-0034844",
+            "height": 72,
+            "last_name": "Barkley",
+            "number": 26,
+            "position": "RB",
+            "profile_id": 2559901,
+            "profile_url": "http://www.nfl.com/player/saquonbarkley/2559901/profile",
+            "status": "ACT",
+            "team": "NYG",
+            "weight": 233,
+            "years_pro": 2
+        }
+        player = Player(data)
+
+        res = self.db.cursor.execute('PRAGMA table_info(Players)').fetchall()
+        columns = [col[1] for col in res]
+
+        self.db.insert_players(player)
+        inserted = self.db.cursor.execute("SELECT * FROM Players").fetchall()
+
+        self.assertEqual(len(inserted), 1)
+        res = inserted[0]
+        for idx, name in enumerate(columns):
+            self.assertEqual(res[idx], getattr(player, name))
