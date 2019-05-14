@@ -1,14 +1,14 @@
-import database.database as nfldb
+import database.nfl_database as nfldb
 import nflgame
 
 
 def build_db():
-    season = 2009
-    while True:
-        print('finding ' + str(season))
-        games = nflgame.games(season)
-        print(len(games))
-        season += 1
+    players = nflgame.players
+    for p, player in players.items():
+        if player.team == '':
+            continue
+        print(player.team)
+        exit()
 
 
 if __name__ == '__main__':
