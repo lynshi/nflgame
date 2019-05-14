@@ -1,4 +1,4 @@
-import database.nfl_database as nfldb
+import database.database as nfldb
 import nflgame
 
 

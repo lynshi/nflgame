@@ -4,7 +4,8 @@ import sqlite3 as sql
 class NFLDatabase:
     def __init__(self, db_file_name):
         """
-        Build a SQLite3 database in the file found at db_file_name
+        Build a SQLite3 database in the file found at db_file_name.
+
         :param db_file_name: name of file to store database in
         """
         self.db_file_name = db_file_name
@@ -75,6 +76,33 @@ class NFLDatabase:
                 city VARCHAR(50) NOT NULL,
                 team_name VARCHAR(50) NOT NULL,
                 full_name VARCHAR(50) NOT NULL
+            )
+        """)
+
+        self.commit()
+
+    def create_games_table(self):
+        """
+        Create Games table to store game schedule information.
+
+        :return: None
+        """
+
+        self.cursor.execute("""
+            CREATE TABLE Games (
+                away VARCHAR(3) NOT NULL,
+                day INT NOT NULL,
+                eid VARCHAR(10) PRIMARY KEY NOT NULL,
+                gamekey VARCHAR(10) NOT NULL,
+                home VARCHAR(3) NOT NULL,
+                season_type VARCHAR(4) NOT NULL,
+                time VARCHAR(5) NOT NULL,
+                meridiem CHAR(2) DEFAULT PM NOT NULL,
+                wday CHAR(3) NOT NULL,
+                week INT NOT NULL,
+                year INT NOT NULL,
+                FOREIGN KEY(away) REFERENCES Teams(team),
+                FOREIGN KEY(home) REFERENCES Teams(team)
             )
         """)
 

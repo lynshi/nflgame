@@ -3,7 +3,7 @@ import unittest
 
 import nflgame
 from nflgame.player import Player
-import database.nfl_database as nfldb
+import nfldatabase.database as nfldb
 
 
 class TestDatabase(unittest.TestCase):
@@ -11,6 +11,7 @@ class TestDatabase(unittest.TestCase):
         self.db = nfldb.NFLDatabase(':memory:')
         self.db.create_players_table()
         self.db.create_teams_table()
+        self.db.create_games_table()
 
     def test_close(self):
         self.db.close()
@@ -53,6 +54,31 @@ class TestDatabase(unittest.TestCase):
             'city': ('VARCHAR(50)', 1, None, 0),
             'team_name': ('VARCHAR(50)', 1, None, 0),
             'full_name': ('VARCHAR(50)', 1, None, 0)
+        }
+
+        for col in res:
+            column = col[1]
+            self.assertIn(column, expected_columns)
+            self.assertTupleEqual(expected_columns[column], col[2:])
+            del expected_columns[column]
+
+        self.assertEqual(len(expected_columns), 0)
+
+    def test_games_table_creation(self):
+        res = self.db.cursor.execute('PRAGMA table_info(Games)').fetchall()
+
+        expected_columns = {
+            'away': ('VARCHAR(3)', 1, None, 0),
+            'day': ('INT', 1, None, 0),
+            'eid': ('VARCHAR(10)', 1, None, 1),
+            'gamekey': ('VARCHAR(10)', 1, None, 0),
+            'home': ('VARCHAR(3)', 1, None, 0),
+            'season_type': ('VARCHAR(4)', 1, None, 0),
+            'time': ('VARCHAR(5)', 1, None, 0),
+            'meridiem': ('CHAR(2)', 1, 'PM', 0),
+            'wday': ('CHAR(3)', 1, None, 0),
+            'week': ('INT', 1, None, 0),
+            'year': ('INT', 1, None, 0)
         }
 
         for col in res:
