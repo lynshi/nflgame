@@ -36,6 +36,11 @@ class NFLDatabase:
         self.conn.commit()
 
     def create_players_table(self):
+        """
+        Create Players table to store player information
+
+        :return: None
+        """
         self.cursor.execute("""
             CREATE TABLE Players (
                 player_id CHAR(10) PRIMARY KEY NOT NULL, 
@@ -56,4 +61,36 @@ class NFLDatabase:
                 status VARCHAR(10) NOT NULL
             )
         """,)
+        self.commit()
+
+    def insert_players(self, players):
+        """
+        Insert player data from players into the Players table. If players is a
+        single item, it is converted to a list automatically.
+
+        :param players: list of Player objects whose data to insert
+        :return: None
+        """
+        if isinstance(players, list) is False \
+                and isinstance(players, tuple) is False:
+            players = [players]
+
+        query = """INSERT INTO Players Values """
+        attributes = [
+            'player_id', 'gsis_name', 'full_name', 'first_name',
+            'last_name', 'team', 'position', 'profile_id', 'profile_url',
+            'uniform_number', 'birthdate', 'college', 'height', 'weight',
+            'years_pro', 'status'
+        ]
+
+        params = []
+        for p in players:
+            for a in attributes:
+                params.append(getattr(p, a))
+        params = tuple(params)
+
+        row_placeholder = '(' + '?,' * (len(attributes) - 1) + '?), '
+        query += row_placeholder * len(players)
+
+        self.cursor.execute(query[:-2], params)
         self.commit()
