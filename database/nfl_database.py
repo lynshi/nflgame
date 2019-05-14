@@ -63,6 +63,23 @@ class NFLDatabase:
         """,)
         self.commit()
 
+    def create_teams_table(self):
+        """
+        Create Teams table to store team information
+
+        :return: None
+        """
+        self.cursor.execute("""
+            CREATE TABLE Teams (
+                team VARCHAR(3) PRIMARY KEY NOT NULL,
+                city VARCHAR(50) NOT NULL,
+                team_name VARCHAR(50) NOT NULL,
+                full_name VARCHAR(50) NOT NULL
+            )
+        """)
+
+        self.commit()
+
     def insert_players(self, players):
         """
         Insert player data from players into the Players table. If players is a
@@ -91,6 +108,38 @@ class NFLDatabase:
 
         row_placeholder = '(' + '?,' * (len(attributes) - 1) + '?), '
         query += row_placeholder * len(players)
+
+        self.cursor.execute(query[:-2], params)
+        self.commit()
+
+    def insert_teams(self, teams):
+        """
+        Insert team data from players into the Teams table. If teams is a
+        single item, it is converted to a list automatically.
+
+        :param teams: list of team data of the format
+            [[Abbreviation, City, Team Name, Full Name],...]
+            e.g. [[NYG, New York G, Giants, New York Giants],
+                  [CLE, Cleveland, Browns, Cleveland Browns]]
+            Additional items in the list are allowed but only the first 4 are
+            used.
+        :return: None
+        """
+
+        if (isinstance(teams, list) is False
+            or isinstance(teams[0], list) is False ) \
+                and (isinstance(teams, tuple) is False
+                     or isinstance(teams[0], tuple) is False):
+            teams = [teams]
+
+        query = """INSERT INTO Teams Values """
+        params = []
+        for t in teams:
+            params += t[:4]
+        params = tuple(params)
+
+        row_placeholder = '(?,?,?,?), '
+        query += row_placeholder * len(teams)
 
         self.cursor.execute(query[:-2], params)
         self.commit()

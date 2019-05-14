@@ -1,6 +1,7 @@
 import sqlite3 as sql
 import unittest
 
+import nflgame
 from nflgame.player import Player
 import database.nfl_database as nfldb
 
@@ -9,13 +10,14 @@ class TestDatabase(unittest.TestCase):
     def setUp(self):
         self.db = nfldb.NFLDatabase(':memory:')
         self.db.create_players_table()
+        self.db.create_teams_table()
 
     def test_close(self):
         self.db.close()
         self.assertRaises(sql.ProgrammingError, self.db.cursor.execute,
                           'CREATE TABLE Failure')
 
-    def test_player_table_creation(self):
+    def test_players_table_creation(self):
         res = self.db.cursor.execute('PRAGMA table_info(Players)').fetchall()
         expected_columns = {
             'player_id': ('CHAR(10)', 1, None, 1),
@@ -34,6 +36,23 @@ class TestDatabase(unittest.TestCase):
             'weight': ('INT', 1, None, 0),
             'years_pro': ('INT', 1, None, 0),
             'status': ('VARCHAR(10)', 1, None, 0)
+        }
+
+        for col in res:
+            column = col[1]
+            self.assertIn(column, expected_columns)
+            self.assertTupleEqual(expected_columns[column], col[2:])
+            del expected_columns[column]
+
+        self.assertEqual(len(expected_columns), 0)
+
+    def test_teams_table_creation(self):
+        res = self.db.cursor.execute('PRAGMA table_info(Teams)').fetchall()
+        expected_columns = {
+            'team': ('VARCHAR(3)', 1, None, 1),
+            'city': ('VARCHAR(50)', 1, None, 0),
+            'team_name': ('VARCHAR(50)', 1, None, 0),
+            'full_name': ('VARCHAR(50)', 1, None, 0)
         }
 
         for col in res:
@@ -188,3 +207,35 @@ class TestDatabase(unittest.TestCase):
         res = inserted[0]
         for idx, name in enumerate(columns):
             self.assertEqual(res[idx], getattr(player, name))
+
+    def test_insert_teams(self):
+        self.db.insert_teams(nflgame.teams)
+        res = self.db.cursor.execute("SELECT * FROM Teams").fetchall()
+
+        self.assertEqual(len(res), len(nflgame.teams))
+        for row in res:
+            found = False
+
+            for team in nflgame.teams:
+                if team[0] == row[0]:
+                    found = True
+                    self.assertListEqual(list(row), team[:4])
+                    break
+
+            self.assertTrue(found)
+
+    def test_insert_one_team(self):
+        self.db.insert_teams(['NYG', 'New York G', 'Giants', 'New York Giants'])
+        res = self.db.cursor.execute("SELECT * FROM Teams").fetchall()
+
+        self.assertEqual(len(res), 1)
+        res = res[0]
+
+        found = False
+        for team in nflgame.teams:
+            if team[0] == res[0]:
+                found = True
+                self.assertListEqual(list(res), team[:4])
+                break
+
+        self.assertTrue(found)
