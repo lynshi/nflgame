@@ -98,7 +98,7 @@ class NFLDatabase:
                 home VARCHAR(3) NOT NULL,
                 season_type VARCHAR(4) NOT NULL,
                 time VARCHAR(5) NOT NULL,
-                meridiem CHAR(2) DEFAULT PM NOT NULL,
+                meridiem CHAR(2),
                 wday CHAR(3) NOT NULL,
                 week INT NOT NULL,
                 year INT NOT NULL,
@@ -201,7 +201,7 @@ class NFLDatabase:
             g = g[1]
             for attr in attributes:
                 if attr == 'meridiem':
-                    params.append(g.get('meridiem', 'PM'))
+                    params.append(g.get('meridiem', None))
                     continue
                 params.append(g[attr])
         params = tuple(params)

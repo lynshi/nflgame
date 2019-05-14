@@ -76,7 +76,7 @@ class TestDatabase(unittest.TestCase):
             'home': ('VARCHAR(3)', 1, None, 0),
             'season_type': ('VARCHAR(4)', 1, None, 0),
             'time': ('VARCHAR(5)', 1, None, 0),
-            'meridiem': ('CHAR(2)', 1, 'PM', 0),
+            'meridiem': ('CHAR(2)', 0, None, 0),
             'wday': ('CHAR(3)', 1, None, 0),
             'week': ('INT', 1, None, 0),
             'year': ('INT', 1, None, 0)
@@ -90,7 +90,7 @@ class TestDatabase(unittest.TestCase):
 
         self.assertEqual(len(expected_columns), 0)
 
-    def test_insert_player(self):
+    def test_insert_players(self):
         test_set = {
             "00-0020531": {
                 "birthdate": "1/15/1979",
@@ -204,7 +204,7 @@ class TestDatabase(unittest.TestCase):
             for idx, name in enumerate(columns):
                 self.assertEqual(res[idx], getattr(player, name))
 
-    def test_single_player_insertion(self):
+    def test_insert_one_player(self):
         data = {
             "birthdate": "2/9/1997",
             "college": "Penn State",
@@ -268,7 +268,7 @@ class TestDatabase(unittest.TestCase):
 
         self.assertTrue(found)
 
-    def test_games_insertion(self):
+    def test_insert_games(self):
         games = [
             [
                 "2015102500",
@@ -312,7 +312,6 @@ class TestDatabase(unittest.TestCase):
                     "eid": "2015102502",
                     "gamekey": "56599",
                     "home": "MIA",
-                    "meridiem": "PM",
                     "month": 10,
                     "season_type": "REG",
                     "time": "1:00",
@@ -343,8 +342,16 @@ class TestDatabase(unittest.TestCase):
             for game in games:
                 if game[0] == row[columns.index('eid')]:
                     for idx, col in enumerate(columns):
+                        if col not in game[1]:
+                            self.assertEqual(col, 'meridiem')
+                            self.assertIsNone((row[idx]))
+                            continue
+
                         self.assertEqual(row[idx], game[1][col])
                     found = True
                     break
 
             self.assertTrue(found)
+
+    def test_insert_one_team(self):
+        pass
