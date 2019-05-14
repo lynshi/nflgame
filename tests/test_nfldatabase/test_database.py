@@ -391,3 +391,48 @@ class TestDatabase(unittest.TestCase):
                 continue
 
             self.assertEqual(row[idx], game[1][col])
+
+    def test_home_foreign_key_constraint_in_games(self):
+        game = [
+            "2015102500",
+            {
+                "away": "BUF",
+                "day": 25,
+                "eid": "2015102500",
+                "gamekey": "56595",
+                "home": "JAC",
+                "meridiem": "AM",
+                "month": 10,
+                "season_type": "REG",
+                "time": "9:30",
+                "wday": "Sun",
+                "week": 7,
+                "year": 2015
+            }
+        ]
+
+        self.db.insert_teams(['BUF', 'Buffalo', 'Bills', 'Buffalo Bills'])
+        self.assertRaises(sql.IntegrityError, self.db.insert_games, game)
+
+    def test_away_foreign_key_constraint_in_games(self):
+        game = [
+            "2015102500",
+            {
+                "away": "BUF",
+                "day": 25,
+                "eid": "2015102500",
+                "gamekey": "56595",
+                "home": "JAC",
+                "meridiem": "AM",
+                "month": 10,
+                "season_type": "REG",
+                "time": "9:30",
+                "wday": "Sun",
+                "week": 7,
+                "year": 2015
+            }
+        ]
+
+        self.db.insert_teams(
+            ['JAC', 'Jacksonville', 'Jaguars', 'Jacksonville Jaguars'])
+        self.assertRaises(sql.IntegrityError, self.db.insert_games, game)

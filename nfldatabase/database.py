@@ -11,6 +11,7 @@ class NFLDatabase:
         self.db_file_name = db_file_name
         self.conn = sql.connect(self.db_file_name)
         self.cursor = self.conn.cursor()
+        self.cursor.execute('PRAGMA foreign_keys = ON')
 
     def close(self):
         """
