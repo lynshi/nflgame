@@ -20,6 +20,64 @@ class TestDatabase(unittest.TestCase):
         self.assertRaises(sql.ProgrammingError, self.db.cursor.execute,
                           'CREATE TABLE Failure')
 
+    def test_get_table_column_names(self):
+        tables = {
+            'Players': [
+                'player_id', 'gsis_name', 'full_name', 'first_name',
+                'last_name', 'team', 'position', 'profile_id', 'profile_url',
+                'uniform_number', 'birthdate', 'college', 'height', 'weight',
+                'years_pro', 'status'
+            ],
+            'Teams': ['team', 'city', 'team_name', 'full_name', 'alt_abbrev'],
+            'Player_Game_Statistics': [
+                'player_id', 'eid', 'defense_ast', 'defense_ffum',
+                'defense_int', 'defense_sk', 'defense_tkl', 'fumbles_lost',
+                'fumbles_rcv', 'fumbles_tot', 'fumbles_trcv', 'fumbles_yds',
+                'kicking_fga', 'kicking_fgm', 'kicking_fgyds', 'kicking_totpfg',
+                'kicking_xpa', 'kicking_xpb', 'kicking_xpmade',
+                'kicking_xpmissed', 'kicking_xptot', 'kickret_avg',
+                'kickret_lng', 'kickret_lngtd', 'kickret_ret', 'kickret_tds',
+                'passing_att', 'passing_cmp', 'passing_ints', 'passing_tds',
+                'passing_twopta', 'passing_twoptm', 'passing_yds',
+                'punting_avg', 'punting_i20', 'punting_lng', 'punting_pts',
+                'punting_yds', 'puntret_avg', 'puntret_lng', 'puntret_lngtd',
+                'puntret_ret', 'puntret_tds', 'receiving_lng',
+                'receiving_lngtd', 'receiving_rec', 'receiving_tds',
+                'receiving_twopta', 'receiving_twoptm', 'receiving_yds',
+                'rushing_att', 'rushing_lng', 'rushing_lngtd', 'rushing_tds',
+                'rushing_twopta', 'rushing_twoptm', 'rushing_yds'
+            ],
+            'Team_Game_Statistics': [
+                'team', 'eid', 'defense_ast', 'defense_ffum',
+                'defense_int', 'defense_sk', 'defense_tkl', 'fumbles_lost',
+                'fumbles_rcv', 'fumbles_tot', 'fumbles_trcv', 'fumbles_yds',
+                'kicking_fga', 'kicking_fgm', 'kicking_fgyds', 'kicking_totpfg',
+                'kicking_xpa', 'kicking_xpb', 'kicking_xpmade',
+                'kicking_xpmissed', 'kicking_xptot', 'kickret_avg',
+                'kickret_lng', 'kickret_lngtd', 'kickret_ret', 'kickret_tds',
+                'passing_att', 'passing_cmp', 'passing_ints', 'passing_tds',
+                'passing_twopta', 'passing_twoptm', 'passing_yds',
+                'punting_avg', 'punting_i20', 'punting_lng', 'punting_pts',
+                'punting_yds', 'puntret_avg', 'puntret_lng', 'puntret_lngtd',
+                'puntret_ret', 'puntret_tds', 'receiving_lng',
+                'receiving_lngtd', 'receiving_rec', 'receiving_tds',
+                'receiving_twopta', 'receiving_twoptm', 'receiving_yds',
+                'rushing_att', 'rushing_lng', 'rushing_lngtd', 'rushing_tds',
+                'rushing_twopta', 'rushing_twoptm', 'rushing_yds'
+            ],
+            'Games': [
+                'away', 'day', 'eid', 'gamekey', 'home', 'season_type', 'time',
+                'meridiem', 'wday', 'week', 'year'
+            ]
+        }
+        for t_name, t_contents in tables.items():
+            columns = self.db.get_table_column_names(t_name)
+            self.assertListEqual(columns, t_contents)
+
+    def test_get_table_column_names_invalid_column(self):
+        self.assertRaises(RuntimeError, self.db.get_table_column_names,
+                          'Not_A_Statistic')
+
     def test_players_table_creation(self):
         res = self.db.cursor.execute('PRAGMA table_info(Players)').fetchall()
         expected_columns = {
