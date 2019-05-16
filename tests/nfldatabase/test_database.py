@@ -13,6 +13,7 @@ class TestDatabase(unittest.TestCase):
         self.db.create_teams_table()
         self.db.create_games_table()
         self.db.create_player_game_statistics_table()
+        self.db.create_team_game_statistics_table()
 
     def test_close(self):
         self.db.close()
@@ -91,6 +92,51 @@ class TestDatabase(unittest.TestCase):
 
         self.assertEqual(len(expected_columns), 0)
 
+    def test_home_foreign_key_constraint_in_games(self):
+        game = [
+            "2015102500",
+            {
+                "away": "BUF",
+                "day": 25,
+                "eid": "2015102500",
+                "gamekey": "56595",
+                "home": "JAC",
+                "meridiem": "AM",
+                "month": 10,
+                "season_type": "REG",
+                "time": "9:30",
+                "wday": "Sun",
+                "week": 7,
+                "year": 2015
+            }
+        ]
+
+        self.db.insert_teams(['BUF', 'Buffalo', 'Bills', 'Buffalo Bills'])
+        self.assertRaises(sql.IntegrityError, self.db.insert_games, game)
+
+    def test_away_foreign_key_constraint_in_games(self):
+        game = [
+            "2015102500",
+            {
+                "away": "BUF",
+                "day": 25,
+                "eid": "2015102500",
+                "gamekey": "56595",
+                "home": "JAC",
+                "meridiem": "AM",
+                "month": 10,
+                "season_type": "REG",
+                "time": "9:30",
+                "wday": "Sun",
+                "week": 7,
+                "year": 2015
+            }
+        ]
+
+        self.db.insert_teams(
+            ['JAC', 'Jacksonville', 'Jaguars', 'Jacksonville Jaguars'])
+        self.assertRaises(sql.IntegrityError, self.db.insert_games, game)
+
     def test_player_game_statistics_table_creation(self):
         res = self.db.cursor.execute('PRAGMA table_info('
                                      'Player_Game_Statistics)').fetchall()
@@ -98,6 +144,78 @@ class TestDatabase(unittest.TestCase):
         expected_columns = {
             'eid': ('VARCHAR(10)', 1, None, 2),
             'player_id': ('CHAR(10)', 1, None, 1),
+            'defense_ast': ('REAL', 0, '0', 0),
+            'defense_ffum': ('REAL', 0, '0', 0),
+            'defense_int': ('REAL', 0, '0', 0),
+            'defense_sk': ('REAL', 0, '0', 0),
+            'defense_tkl': ('REAL', 0, '0', 0),
+            'fumbles_lost': ('REAL', 0, '0', 0),
+            'fumbles_rcv': ('REAL', 0, '0', 0),
+            'fumbles_tot': ('REAL', 0, '0', 0),
+            'fumbles_trcv': ('REAL', 0, '0', 0),
+            'fumbles_yds': ('REAL', 0, '0', 0),
+            'kicking_fga': ('REAL', 0, '0', 0),
+            'kicking_fgm': ('REAL', 0, '0', 0),
+            'kicking_fgyds': ('REAL', 0, '0', 0),
+            'kicking_totpfg': ('REAL', 0, '0', 0),
+            'kicking_xpa': ('REAL', 0, '0', 0),
+            'kicking_xpb': ('REAL', 0, '0', 0),
+            'kicking_xpmade': ('REAL', 0, '0', 0),
+            'kicking_xpmissed': ('REAL', 0, '0', 0),
+            'kicking_xptot': ('REAL', 0, '0', 0),
+            'kickret_avg': ('REAL', 0, '0', 0),
+            'kickret_lng': ('REAL', 0, '0', 0),
+            'kickret_lngtd': ('REAL', 0, '0', 0),
+            'kickret_ret': ('REAL', 0, '0', 0),
+            'kickret_tds': ('REAL', 0, '0', 0),
+            'passing_att': ('REAL', 0, '0', 0),
+            'passing_cmp': ('REAL', 0, '0', 0),
+            'passing_ints': ('REAL', 0, '0', 0),
+            'passing_tds': ('REAL', 0, '0', 0),
+            'passing_twopta': ('REAL', 0, '0', 0),
+            'passing_twoptm': ('REAL', 0, '0', 0),
+            'passing_yds': ('REAL', 0, '0', 0),
+            'punting_avg': ('REAL', 0, '0', 0),
+            'punting_i20': ('REAL', 0, '0', 0),
+            'punting_lng': ('REAL', 0, '0', 0),
+            'punting_pts': ('REAL', 0, '0', 0),
+            'punting_yds': ('REAL', 0, '0', 0),
+            'puntret_avg': ('REAL', 0, '0', 0),
+            'puntret_lng': ('REAL', 0, '0', 0),
+            'puntret_lngtd': ('REAL', 0, '0', 0),
+            'puntret_ret': ('REAL', 0, '0', 0),
+            'puntret_tds': ('REAL', 0, '0', 0),
+            'receiving_lng': ('REAL', 0, '0', 0),
+            'receiving_lngtd': ('REAL', 0, '0', 0),
+            'receiving_rec': ('REAL', 0, '0', 0),
+            'receiving_tds': ('REAL', 0, '0', 0),
+            'receiving_twopta': ('REAL', 0, '0', 0),
+            'receiving_twoptm': ('REAL', 0, '0', 0),
+            'receiving_yds': ('REAL', 0, '0', 0),
+            'rushing_att': ('REAL', 0, '0', 0),
+            'rushing_lng': ('REAL', 0, '0', 0),
+            'rushing_lngtd': ('REAL', 0, '0', 0),
+            'rushing_tds': ('REAL', 0, '0', 0),
+            'rushing_twopta': ('REAL', 0, '0', 0),
+            'rushing_twoptm': ('REAL', 0, '0', 0),
+            'rushing_yds': ('REAL', 0, '0', 0),
+        }
+
+        for col in res:
+            column = col[1]
+            self.assertIn(column, expected_columns)
+            self.assertTupleEqual(expected_columns[column], col[2:])
+            del expected_columns[column]
+
+        self.assertEqual(len(expected_columns), 0)
+
+    def test_team_game_statistics_table_creation(self):
+        res = self.db.cursor.execute('PRAGMA table_info('
+                                     'Team_Game_Statistics)').fetchall()
+
+        expected_columns = {
+            'eid': ('VARCHAR(10)', 1, None, 2),
+            'team': ('VARCHAR(3)', 1, None, 1),
             'defense_ast': ('REAL', 0, '0', 0),
             'defense_ffum': ('REAL', 0, '0', 0),
             'defense_int': ('REAL', 0, '0', 0),
@@ -464,48 +582,3 @@ class TestDatabase(unittest.TestCase):
                 continue
 
             self.assertEqual(row[idx], game[1][col])
-
-    def test_home_foreign_key_constraint_in_games(self):
-        game = [
-            "2015102500",
-            {
-                "away": "BUF",
-                "day": 25,
-                "eid": "2015102500",
-                "gamekey": "56595",
-                "home": "JAC",
-                "meridiem": "AM",
-                "month": 10,
-                "season_type": "REG",
-                "time": "9:30",
-                "wday": "Sun",
-                "week": 7,
-                "year": 2015
-            }
-        ]
-
-        self.db.insert_teams(['BUF', 'Buffalo', 'Bills', 'Buffalo Bills'])
-        self.assertRaises(sql.IntegrityError, self.db.insert_games, game)
-
-    def test_away_foreign_key_constraint_in_games(self):
-        game = [
-            "2015102500",
-            {
-                "away": "BUF",
-                "day": 25,
-                "eid": "2015102500",
-                "gamekey": "56595",
-                "home": "JAC",
-                "meridiem": "AM",
-                "month": 10,
-                "season_type": "REG",
-                "time": "9:30",
-                "wday": "Sun",
-                "week": 7,
-                "year": 2015
-            }
-        ]
-
-        self.db.insert_teams(
-            ['JAC', 'Jacksonville', 'Jaguars', 'Jacksonville Jaguars'])
-        self.assertRaises(sql.IntegrityError, self.db.insert_games, game)
