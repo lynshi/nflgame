@@ -256,3 +256,43 @@ class NFLDatabase:
 
         self.cursor.execute(query[:-2], params)
         self.commit()
+
+    def insert_player_game_statistics(self, player_id, player_stats):
+        """
+        Insert a player's statistics for a single game.
+
+        :param player_id: player_id for player whose statistics
+            are to be inserted
+        :param player_stats: OrderedDict of player statistics, as would be
+            obtained with player._stats
+        :return: None
+        """
+
+        columns = ('player_id',) + tuple(player_stats.keys())
+        query = 'INSERT INTO Player_Game_Statistics (' \
+                + '?,' * (len(columns) - 1) + '?) Values (' \
+                + '?,' * (len(columns) - 1) + '?)'
+
+        self.cursor.execute(query,
+                            columns + (player_id,) + player_stats.values())
+        self.commit()
+
+    def insert_team_game_statistics(self, team, team_stats):
+        """
+        Insert a team's statistics for a single game.
+
+        :param team: team whose statistics are to be inserted. Follow the
+            abbreviation in nflgame.teams
+        :param team_stats: OrderedDict of team statistics, formatted as though
+            obtained from player._stats
+        :return: None
+        """
+
+        columns = ('team',) + tuple(team_stats.keys())
+        query = 'INSERT INTO Team_Game_Statistics (' \
+                + '?,' * (len(columns) - 1) + '?) Values (' \
+                + '?,' * (len(columns) - 1) + '?)'
+
+        self.cursor.execute(query,
+                            columns + (team,) + team_stats.values())
+        self.commit()
