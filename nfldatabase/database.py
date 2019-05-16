@@ -13,6 +13,24 @@ class NFLDatabase:
         self.cursor = self.conn.cursor()
         self.cursor.execute('PRAGMA foreign_keys = ON')
 
+    def get_table_column_names(self, table_name):
+        """
+        Return table columns, in order, for table table_name
+
+        :param table_name: name of table to fetch column names for
+        :return: list of column names in order of schema
+
+        :raises RuntimeError: if table_name is not a valid table name
+        """
+        valid_tables = {'Players', 'Games', 'Teams', 'Player_Game_Statistics',
+                        'Team_Game_Statistics'}
+        if table_name not in valid_tables:
+            raise RuntimeError(table_name + ' is not a valid table')
+
+        res = self.cursor.execute('PRAGMA table_info(' + table_name +
+                                  ')').fetchall()
+        return [col[1] for col in res]
+
     def close(self):
         """
         Call to explicitly close db connection
@@ -373,6 +391,9 @@ class NFLDatabase:
         :param player_stats: dict of player statistics, as would be
             obtained with player._stats
         :return: None
+
+        :raises RuntimeError: if any key in team_stats does not correspond to
+            a valid statistic name
         """
 
         valid_columns = {
@@ -418,6 +439,9 @@ class NFLDatabase:
         :param team_stats: dict of team statistics, formatted as though
             obtained from player._stats
         :return: None
+
+        :raises RuntimeError: if any key in team_stats does not correspond to
+            a valid statistic name
         """
 
         valid_columns = {
