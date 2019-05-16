@@ -363,42 +363,92 @@ class NFLDatabase:
         self.cursor.execute(query[:-2], params)
         self.commit()
 
-    def insert_player_game_statistics(self, player_id, player_stats):
+    def insert_player_game_statistics(self, player_id, eid, player_stats):
         """
         Insert a player's statistics for a single game.
 
         :param player_id: player_id for player whose statistics
             are to be inserted
-        :param player_stats: OrderedDict of player statistics, as would be
+        :param eid: id for game in which the statistics were accumulated
+        :param player_stats: dict of player statistics, as would be
             obtained with player._stats
         :return: None
         """
 
-        columns = ('player_id',) + tuple(player_stats.keys())
-        query = 'INSERT INTO Player_Game_Statistics (' \
-                + '?,' * (len(columns) - 1) + '?) Values (' \
-                + '?,' * (len(columns) - 1) + '?)'
+        valid_columns = {
+            'defense_ast', 'defense_ffum', 'defense_int', 'defense_sk',
+            'defense_tkl', 'fumbles_lost', 'fumbles_rcv', 'fumbles_tot',
+            'fumbles_trcv', 'fumbles_yds', 'kicking_fga', 'kicking_fgm',
+            'kicking_fgyds', 'kicking_totpfg', 'kicking_xpa', 'kicking_xpb',
+            'kicking_xpmade', 'kicking_xpmissed', 'kicking_xptot',
+            'kickret_avg', 'kickret_lng', 'kickret_lngtd', 'kickret_ret',
+            'kickret_tds', 'passing_att', 'passing_cmp', 'passing_ints',
+            'passing_tds', 'passing_twopta', 'passing_twoptm', 'passing_yds',
+            'punting_avg', 'punting_i20', 'punting_lng', 'punting_pts',
+            'punting_yds', 'puntret_avg', 'puntret_lng', 'puntret_lngtd',
+            'puntret_ret', 'puntret_tds', 'receiving_lng', 'receiving_lngtd',
+            'receiving_rec', 'receiving_tds', 'receiving_twopta',
+            'receiving_twoptm', 'receiving_yds', 'rushing_att', 'rushing_lng',
+            'rushing_lngtd', 'rushing_tds', 'rushing_twopta', 'rushing_twoptm',
+            'rushing_yds'
+        }
+
+        columns = '(player_id, eid, '
+        for stat in player_stats.keys():
+            if stat not in valid_columns:
+                raise RuntimeError(stat + ' is not a valid column in '
+                                          'Player_Game_Statistics')
+            columns += stat + ', '
+
+        query = 'INSERT INTO Player_Game_Statistics ' \
+                + columns[:-2] + ') Values (?,?,' \
+                + '?,' * (len(player_stats) - 1) + '?)'
 
         self.cursor.execute(query,
-                            columns + (player_id,) + player_stats.values())
+                            (player_id, eid) + tuple(player_stats.values()))
         self.commit()
 
-    def insert_team_game_statistics(self, team, team_stats):
+    def insert_team_game_statistics(self, team, eid, team_stats):
         """
         Insert a team's statistics for a single game.
 
         :param team: team whose statistics are to be inserted. Follow the
             abbreviation in nflgame.teams
-        :param team_stats: OrderedDict of team statistics, formatted as though
+        :param eid: id for game in which the statistics were accumulated
+        :param team_stats: dict of team statistics, formatted as though
             obtained from player._stats
         :return: None
         """
 
-        columns = ('team',) + tuple(team_stats.keys())
-        query = 'INSERT INTO Team_Game_Statistics (' \
-                + '?,' * (len(columns) - 1) + '?) Values (' \
-                + '?,' * (len(columns) - 1) + '?)'
+        valid_columns = {
+            'defense_ast', 'defense_ffum', 'defense_int', 'defense_sk',
+            'defense_tkl', 'fumbles_lost', 'fumbles_rcv', 'fumbles_tot',
+            'fumbles_trcv', 'fumbles_yds', 'kicking_fga', 'kicking_fgm',
+            'kicking_fgyds', 'kicking_totpfg', 'kicking_xpa', 'kicking_xpb',
+            'kicking_xpmade', 'kicking_xpmissed', 'kicking_xptot',
+            'kickret_avg', 'kickret_lng', 'kickret_lngtd', 'kickret_ret',
+            'kickret_tds', 'passing_att', 'passing_cmp', 'passing_ints',
+            'passing_tds', 'passing_twopta', 'passing_twoptm', 'passing_yds',
+            'punting_avg', 'punting_i20', 'punting_lng', 'punting_pts',
+            'punting_yds', 'puntret_avg', 'puntret_lng', 'puntret_lngtd',
+            'puntret_ret', 'puntret_tds', 'receiving_lng', 'receiving_lngtd',
+            'receiving_rec', 'receiving_tds', 'receiving_twopta',
+            'receiving_twoptm', 'receiving_yds', 'rushing_att', 'rushing_lng',
+            'rushing_lngtd', 'rushing_tds', 'rushing_twopta', 'rushing_twoptm',
+            'rushing_yds'
+        }
+
+        columns = '(team, eid, '
+        for stat in team_stats.keys():
+            if stat not in valid_columns:
+                raise RuntimeError(stat + ' is not a valid column in '
+                                          'Team_Game_Statistics')
+            columns += stat + ', '
+
+        query = 'INSERT INTO Team_Game_Statistics ' \
+                + columns[:-2] + ') Values (?,?,' \
+                + '?,' * (len(team_stats) - 1) + '?)'
 
         self.cursor.execute(query,
-                            columns + (team,) + team_stats.values())
+                            (team, eid) + tuple(team_stats.values()))
         self.commit()

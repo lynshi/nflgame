@@ -209,6 +209,11 @@ class TestDatabase(unittest.TestCase):
 
         self.assertEqual(len(expected_columns), 0)
 
+    def test_player_game_statistics_eid_foreign_key_constraint(self):
+        self.assertRaises(sql.IntegrityError,
+                          self.db.insert_player_game_statistics,
+                          '1234567890', '2015102500', {'defense_ast': 23})
+
     def test_team_game_statistics_table_creation(self):
         res = self.db.cursor.execute('PRAGMA table_info('
                                      'Team_Game_Statistics)').fetchall()
@@ -280,6 +285,11 @@ class TestDatabase(unittest.TestCase):
             del expected_columns[column]
 
         self.assertEqual(len(expected_columns), 0)
+
+    def test_team_game_statistics_eid_foreign_key_constraint(self):
+        self.assertRaises(sql.IntegrityError,
+                          self.db.insert_team_game_statistics,
+                          'NYG', '2015102500', {'defense_ast': 23})
 
     def test_insert_players(self):
         test_set = {
@@ -582,3 +592,11 @@ class TestDatabase(unittest.TestCase):
                 continue
 
             self.assertEqual(row[idx], game[1][col])
+
+    def test_insert_player_game_statistics_invalid_column(self):
+        self.assertRaises(RuntimeError, self.db.insert_player_game_statistics,
+                          '1234567890', '2015102500', {'failure': 42})
+
+    def test_insert_team_game_statistics_invalid_column(self):
+        self.assertRaises(RuntimeError, self.db.insert_team_game_statistics,
+                          'NYG', '2015102500', {'failure': 42})
