@@ -110,6 +110,50 @@ class NFLDatabase:
 
         self.commit()
 
+    def create_player_game_statistics_table(self, stat_columns):
+        """
+        Create Player_Game_Statistics table to store accumulated statistics for
+        each player in each game. Columns are created for each element in
+        stat_columns.
+
+        :param stat_columns: list of statistic names to create columns for
+        :return: None
+        """
+
+        prefix = """CREATE TABLE Player_Game_Statistics (
+                        eid VARCHAR(10) NOT NULL,
+                        player_id CHAR(10) NOT NULL, """
+        suffix = """FOREIGN KEY (eid) REFERENCES Games,
+                    FOREIGN KEY (player_id) REFERENCES Players,
+                    PRIMARY KEY (eid, player_id))"""
+
+        placeholders = '? INT DEFAULT 0, ' * len(stat_columns)
+
+        self.cursor.execute(prefix + placeholders + suffix, stat_columns)
+        self.commit()
+
+    def create_team_game_statistics_table(self, stat_columns):
+        """
+        Create Team_Game_Statistics table to store accumulated statistics for
+        each team in each game. Columns are created for each element in
+        stat_columns.
+
+        :param stat_columns: list of statistic names to create columns for
+        :return: None
+        """
+
+        prefix = """CREATE TABLE Team_Game_Statistics (
+                        eid VARCHAR(10) NOT NULL,
+                        team VARCHAR(3) NOT NULL, """
+        suffix = """FOREIGN KEY (eid) REFERENCES Games,
+                    FOREIGN KEY (team) REFERENCES Teams,
+                    PRIMARY KEY (eid, team))"""
+
+        placeholders = '? INT DEFAULT 0, ' * len(stat_columns)
+
+        self.cursor.execute(prefix + placeholders + suffix, stat_columns)
+        self.commit()
+
     def insert_players(self, players):
         """
         Insert player data from players into the Players table. If players is a
