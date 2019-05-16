@@ -57,8 +57,8 @@ class NFLDatabase:
                 uniform_number INT NOT NULL,
                 birthdate VARCHAR(10) NOT NULL, 
                 college VARCHAR(50) NOT NULL, 
-                height INT NOT NULL, 
-                weight INT NOT NULL, 
+                height REAL NOT NULL, 
+                weight REAL NOT NULL, 
                 years_pro INT NOT NULL, 
                 status VARCHAR(10) NOT NULL
             )
@@ -103,33 +103,85 @@ class NFLDatabase:
                 wday CHAR(3) NOT NULL,
                 week INT NOT NULL,
                 year INT NOT NULL,
-                FOREIGN KEY(away) REFERENCES Teams(team),
-                FOREIGN KEY(home) REFERENCES Teams(team)
+                FOREIGN KEY (away) REFERENCES Teams(team),
+                FOREIGN KEY (home) REFERENCES Teams(team)
             )
         """)
 
         self.commit()
 
-    def create_player_game_statistics_table(self, stat_columns):
+    def create_player_game_statistics_table(self):
         """
         Create Player_Game_Statistics table to store accumulated statistics for
-        each player in each game. Columns are created for each element in
-        stat_columns.
+        each player in each game.
 
-        :param stat_columns: list of statistic names to create columns for
         :return: None
         """
 
-        prefix = """CREATE TABLE Player_Game_Statistics (
-                        eid VARCHAR(10) NOT NULL,
-                        player_id CHAR(10) NOT NULL, """
-        suffix = """FOREIGN KEY (eid) REFERENCES Games,
-                    FOREIGN KEY (player_id) REFERENCES Players,
-                    PRIMARY KEY (eid, player_id))"""
-
-        placeholders = '? INT DEFAULT 0, ' * len(stat_columns)
-
-        self.cursor.execute(prefix + placeholders + suffix, stat_columns)
+        self.cursor.execute("""
+            CREATE TABLE Player_Game_Statistics (
+                eid VARCHAR(10) NOT NULL,
+                player_id CHAR(10) NOT NULL,
+                defense_ast REAL DEFAULT 0,
+                defense_ffum REAL DEFAULT 0,
+                defense_int REAL DEFAULT 0,
+                defense_sk REAL DEFAULT 0,
+                defense_tkl REAL DEFAULT 0,
+                fumbles_lost REAL DEFAULT 0,
+                fumbles_rcv REAL DEFAULT 0,
+                fumbles_tot REAL DEFAULT 0,
+                fumbles_trcv REAL DEFAULT 0,
+                fumbles_yds REAL DEFAULT 0,
+                kicking_fga REAL DEFAULT 0,
+                kicking_fgm REAL DEFAULT 0,
+                kicking_fgyds REAL DEFAULT 0,
+                kicking_totpfg REAL DEFAULT 0,
+                kicking_xpa REAL DEFAULT 0,
+                kicking_xpb REAL DEFAULT 0,
+                kicking_xpmade REAL DEFAULT 0,
+                kicking_xpmissed REAL DEFAULT 0,
+                kicking_xptot REAL DEFAULT 0,
+                kickret_avg REAL DEFAULT 0,
+                kickret_lng REAL DEFAULT 0,
+                kickret_lngtd REAL DEFAULT 0,
+                kickret_ret REAL DEFAULT 0,
+                kickret_tds REAL DEFAULT 0,
+                passing_att REAL DEFAULT 0,
+                passing_cmp REAL DEFAULT 0,
+                passing_ints REAL DEFAULT 0,
+                passing_tds REAL DEFAULT 0,
+                passing_twopta REAL DEFAULT 0,
+                passing_twoptm REAL DEFAULT 0,
+                passing_yds REAL DEFAULT 0,
+                punting_avg REAL DEFAULT 0,
+                punting_i20 REAL DEFAULT 0,
+                punting_lng REAL DEFAULT 0,
+                punting_pts REAL DEFAULT 0,
+                punting_yds REAL DEFAULT 0,
+                puntret_avg REAL DEFAULT 0,
+                puntret_lng REAL DEFAULT 0,
+                puntret_lngtd REAL DEFAULT 0,
+                puntret_ret REAL DEFAULT 0,
+                puntret_tds REAL DEFAULT 0,
+                receiving_lng REAL DEFAULT 0,
+                receiving_lngtd REAL DEFAULT 0,
+                receiving_rec REAL DEFAULT 0,
+                receiving_tds REAL DEFAULT 0,
+                receiving_twopta REAL DEFAULT 0,
+                receiving_twoptm REAL DEFAULT 0,
+                receiving_yds REAL DEFAULT 0,
+                rushing_att REAL DEFAULT 0,
+                rushing_lng REAL DEFAULT 0,
+                rushing_lngtd REAL DEFAULT 0,
+                rushing_tds REAL DEFAULT 0,
+                rushing_twopta REAL DEFAULT 0,
+                rushing_twoptm REAL DEFAULT 0,
+                rushing_yds REAL DEFAULT 0,
+                PRIMARY KEY (player_id, eid),
+                FOREIGN KEY (eid) REFERENCES Games,
+                FOREIGN KEY (player_id) REFERENCES Players 
+            )
+        """)
         self.commit()
 
     def create_team_game_statistics_table(self, stat_columns):
@@ -149,7 +201,7 @@ class NFLDatabase:
                     FOREIGN KEY (team) REFERENCES Teams,
                     PRIMARY KEY (eid, team))"""
 
-        placeholders = '? INT DEFAULT 0, ' * len(stat_columns)
+        placeholders = '? REAL DEFAULT 0, ' * len(stat_columns)
 
         self.cursor.execute(prefix + placeholders + suffix, stat_columns)
         self.commit()

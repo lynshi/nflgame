@@ -12,6 +12,7 @@ class TestDatabase(unittest.TestCase):
         self.db.create_players_table()
         self.db.create_teams_table()
         self.db.create_games_table()
+        self.db.create_player_game_statistics_table()
 
     def test_close(self):
         self.db.close()
@@ -33,8 +34,8 @@ class TestDatabase(unittest.TestCase):
             'uniform_number': ('INT', 1, None, 0),
             'birthdate': ('VARCHAR(10)', 1, None, 0),
             'college': ('VARCHAR(50)', 1, None, 0),
-            'height': ('INT', 1, None, 0),
-            'weight': ('INT', 1, None, 0),
+            'height': ('REAL', 1, None, 0),
+            'weight': ('REAL', 1, None, 0),
             'years_pro': ('INT', 1, None, 0),
             'status': ('VARCHAR(10)', 1, None, 0)
         }
@@ -80,6 +81,78 @@ class TestDatabase(unittest.TestCase):
             'wday': ('CHAR(3)', 1, None, 0),
             'week': ('INT', 1, None, 0),
             'year': ('INT', 1, None, 0)
+        }
+
+        for col in res:
+            column = col[1]
+            self.assertIn(column, expected_columns)
+            self.assertTupleEqual(expected_columns[column], col[2:])
+            del expected_columns[column]
+
+        self.assertEqual(len(expected_columns), 0)
+
+    def test_player_game_statistics_table_creation(self):
+        res = self.db.cursor.execute('PRAGMA table_info('
+                                     'Player_Game_Statistics)').fetchall()
+
+        expected_columns = {
+            'eid': ('VARCHAR(10)', 1, None, 2),
+            'player_id': ('CHAR(10)', 1, None, 1),
+            'defense_ast': ('REAL', 0, '0', 0),
+            'defense_ffum': ('REAL', 0, '0', 0),
+            'defense_int': ('REAL', 0, '0', 0),
+            'defense_sk': ('REAL', 0, '0', 0),
+            'defense_tkl': ('REAL', 0, '0', 0),
+            'fumbles_lost': ('REAL', 0, '0', 0),
+            'fumbles_rcv': ('REAL', 0, '0', 0),
+            'fumbles_tot': ('REAL', 0, '0', 0),
+            'fumbles_trcv': ('REAL', 0, '0', 0),
+            'fumbles_yds': ('REAL', 0, '0', 0),
+            'kicking_fga': ('REAL', 0, '0', 0),
+            'kicking_fgm': ('REAL', 0, '0', 0),
+            'kicking_fgyds': ('REAL', 0, '0', 0),
+            'kicking_totpfg': ('REAL', 0, '0', 0),
+            'kicking_xpa': ('REAL', 0, '0', 0),
+            'kicking_xpb': ('REAL', 0, '0', 0),
+            'kicking_xpmade': ('REAL', 0, '0', 0),
+            'kicking_xpmissed': ('REAL', 0, '0', 0),
+            'kicking_xptot': ('REAL', 0, '0', 0),
+            'kickret_avg': ('REAL', 0, '0', 0),
+            'kickret_lng': ('REAL', 0, '0', 0),
+            'kickret_lngtd': ('REAL', 0, '0', 0),
+            'kickret_ret': ('REAL', 0, '0', 0),
+            'kickret_tds': ('REAL', 0, '0', 0),
+            'passing_att': ('REAL', 0, '0', 0),
+            'passing_cmp': ('REAL', 0, '0', 0),
+            'passing_ints': ('REAL', 0, '0', 0),
+            'passing_tds': ('REAL', 0, '0', 0),
+            'passing_twopta': ('REAL', 0, '0', 0),
+            'passing_twoptm': ('REAL', 0, '0', 0),
+            'passing_yds': ('REAL', 0, '0', 0),
+            'punting_avg': ('REAL', 0, '0', 0),
+            'punting_i20': ('REAL', 0, '0', 0),
+            'punting_lng': ('REAL', 0, '0', 0),
+            'punting_pts': ('REAL', 0, '0', 0),
+            'punting_yds': ('REAL', 0, '0', 0),
+            'puntret_avg': ('REAL', 0, '0', 0),
+            'puntret_lng': ('REAL', 0, '0', 0),
+            'puntret_lngtd': ('REAL', 0, '0', 0),
+            'puntret_ret': ('REAL', 0, '0', 0),
+            'puntret_tds': ('REAL', 0, '0', 0),
+            'receiving_lng': ('REAL', 0, '0', 0),
+            'receiving_lngtd': ('REAL', 0, '0', 0),
+            'receiving_rec': ('REAL', 0, '0', 0),
+            'receiving_tds': ('REAL', 0, '0', 0),
+            'receiving_twopta': ('REAL', 0, '0', 0),
+            'receiving_twoptm': ('REAL', 0, '0', 0),
+            'receiving_yds': ('REAL', 0, '0', 0),
+            'rushing_att': ('REAL', 0, '0', 0),
+            'rushing_lng': ('REAL', 0, '0', 0),
+            'rushing_lngtd': ('REAL', 0, '0', 0),
+            'rushing_tds': ('REAL', 0, '0', 0),
+            'rushing_twopta': ('REAL', 0, '0', 0),
+            'rushing_twoptm': ('REAL', 0, '0', 0),
+            'rushing_yds': ('REAL', 0, '0', 0),
         }
 
         for col in res:
@@ -353,7 +426,7 @@ class TestDatabase(unittest.TestCase):
 
             self.assertTrue(found)
 
-    def test_insert_one_team(self):
+    def test_insert_one_game(self):
         game = [
             "2015102500",
             {

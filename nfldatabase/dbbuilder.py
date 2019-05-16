@@ -40,7 +40,8 @@ class NFLdbBuilder:
         """
         self.db.insert_teams(nflgame.teams)
 
-    def _find_stat_columns(self):
+    @staticmethod
+    def _find_stat_columns():
         """
         Find all statistic names for players in nflgame.
 
