@@ -4,11 +4,8 @@ import nflgame
 
 
 def build_db():
-    stats = NFLdbBuilder._find_stat_columns()
-    s = ''
-    for stat in sorted(stats):
-        s += '\'' + stat + '\', '
-    print(s[:-2])
+    db = NFLdbBuilder(':memory:')
+    db.run()
 
 
 if __name__ == '__main__':

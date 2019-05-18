@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import sqlite3 as sql
 import unittest
 
@@ -71,8 +72,8 @@ class TestDatabase(unittest.TestCase):
             ]
         }
         for t_name, t_contents in tables.items():
-            columns = self.db.get_table_column_names(t_name)
-            self.assertListEqual(columns, t_contents)
+            columns = set(self.db.get_table_column_names(t_name))
+            self.assertSetEqual(columns, set(t_contents))
 
     def test_get_table_column_names_invalid_column(self):
         self.assertRaises(RuntimeError, self.db.get_table_column_names,
@@ -151,9 +152,8 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(len(expected_columns), 0)
 
     def test_home_foreign_key_constraint_in_games(self):
-        game = [
-            "2015102500",
-            {
+        game = {
+            "2015102500": {
                 "away": "BUF",
                 "day": 25,
                 "eid": "2015102500",
@@ -167,15 +167,14 @@ class TestDatabase(unittest.TestCase):
                 "week": 7,
                 "year": 2015
             }
-        ]
+        }
 
         self.db.insert_teams(['BUF', 'Buffalo', 'Bills', 'Buffalo Bills'])
         self.assertRaises(sql.IntegrityError, self.db.insert_games, game)
 
     def test_away_foreign_key_constraint_in_games(self):
-        game = [
-            "2015102500",
-            {
+        game = {
+            "2015102500": {
                 "away": "BUF",
                 "day": 25,
                 "eid": "2015102500",
@@ -189,7 +188,7 @@ class TestDatabase(unittest.TestCase):
                 "week": 7,
                 "year": 2015
             }
-        ]
+        }
 
         self.db.insert_teams(
             ['JAC', 'Jacksonville', 'Jaguars', 'Jacksonville Jaguars'])
@@ -526,58 +525,49 @@ class TestDatabase(unittest.TestCase):
         self.assertTrue(found)
 
     def test_insert_games(self):
-        games = [
-            [
-                "2015102500",
-                {
-                    "away": "BUF",
-                    "day": 25,
-                    "eid": "2015102500",
-                    "gamekey": "56595",
-                    "home": "JAC",
-                    "meridiem": "AM",
-                    "month": 10,
-                    "season_type": "REG",
-                    "time": "9:30",
-                    "wday": "Sun",
-                    "week": 7,
-                    "year": 2015
-                }
-            ],
-            [
-                "2015102501",
-                {
-                    "away": "CLE",
-                    "day": 25,
-                    "eid": "2015102501",
-                    "gamekey": "56601",
-                    "home": "STL",
-                    "meridiem": "PM",
-                    "month": 10,
-                    "season_type": "REG",
-                    "time": "1:00",
-                    "wday": "Sun",
-                    "week": 7,
-                    "year": 2015
-                }
-            ],
-            [
-                "2015102502",
-                {
-                    "away": "HOU",
-                    "day": 25,
-                    "eid": "2015102502",
-                    "gamekey": "56599",
-                    "home": "MIA",
-                    "month": 10,
-                    "season_type": "REG",
-                    "time": "1:00",
-                    "wday": "Sun",
-                    "week": 7,
-                    "year": 2015
-                }
-            ]
-        ]
+        games = OrderedDict({
+            "2015102500": {
+                "away": "BUF",
+                "day": 25,
+                "eid": "2015102500",
+                "gamekey": "56595",
+                "home": "JAC",
+                "meridiem": "AM",
+                "month": 10,
+                "season_type": "REG",
+                "time": "9:30",
+                "wday": "Sun",
+                "week": 7,
+                "year": 2015
+            },
+            "2015102501": {
+                "away": "CLE",
+                "day": 25,
+                "eid": "2015102501",
+                "gamekey": "56601",
+                "home": "STL",
+                "meridiem": "PM",
+                "month": 10,
+                "season_type": "REG",
+                "time": "1:00",
+                "wday": "Sun",
+                "week": 7,
+                "year": 2015
+            },
+            "2015102502": {
+                "away": "HOU",
+                "day": 25,
+                "eid": "2015102502",
+                "gamekey": "56599",
+                "home": "MIA",
+                "month": 10,
+                "season_type": "REG",
+                "time": "1:00",
+                "wday": "Sun",
+                "week": 7,
+                "year": 2015
+            }
+        })
 
         teams = [['BUF', 'Buffalo', 'Bills', 'Buffalo Bills'],
                  ['JAC', 'Jacksonville', 'Jaguars', 'Jacksonville Jaguars'],
@@ -594,58 +584,52 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(len(res), len(games))
 
         for row in res:
-            found = False
-            for game in games:
-                if game[0] == row[columns.index('eid')]:
-                    for idx, col in enumerate(columns):
-                        if col not in game[1]:
-                            self.assertEqual(col, 'meridiem')
-                            self.assertIsNone((row[idx]))
-                            continue
+            self.assertIn(row[columns.index('eid')], games)
+            for idx, col in enumerate(columns):
+                if col not in games[row[columns.index('eid')]]:
+                    self.assertEqual(col, 'meridiem')
+                    self.assertIsNone((row[idx]))
+                    continue
 
-                        self.assertEqual(row[idx], game[1][col])
-                    found = True
-                    break
+                self.assertEqual(row[idx],
+                                 games[row[columns.index('eid')]][col])
 
-            self.assertTrue(found)
+    def test_insert_more_than_999_games(self):
+        info = {
+            "away": "BUF",
+            "day": 25,
+            "gamekey": "56595",
+            "home": "JAC",
+            "meridiem": "AM",
+            "month": 10,
+            "season_type": "REG",
+            "time": "9:30",
+            "wday": "Sun",
+            "week": 7,
+            "year": 2015
+        }
+        games = OrderedDict({})
+        for i in range(999*3 + 500):
+            games[str(i).zfill(10)] = {**info, **{'eid': str(i).zfill(10)}}
 
-    def test_insert_one_game(self):
-        game = [
-            "2015102500",
-            {
-                "away": "BUF",
-                "day": 25,
-                "eid": "2015102500",
-                "gamekey": "56595",
-                "home": "JAC",
-                "meridiem": "AM",
-                "month": 10,
-                "season_type": "REG",
-                "time": "9:30",
-                "wday": "Sun",
-                "week": 7,
-                "year": 2015
-            }
-        ]
-
-        teams = [['BUF', 'Buffalo', 'Bills', 'Buffalo Bills'],
-                 ['JAC', 'Jacksonville', 'Jaguars', 'Jacksonville Jaguars']]
-        self.db.insert_teams(teams)
-        self.db.insert_games(game)
+        self.db.insert_teams(nflgame.teams)
+        self.db.insert_games(games)
 
         columns = self.db.get_table_column_names('Games')
+        games_inserted = \
+            self.db.cursor.execute("SELECT * FROM Games").fetchall()
+        self.assertEqual(len(games_inserted), len(games))
 
-        res = self.db.cursor.execute("SELECT * FROM Games").fetchall()
-        self.assertEqual(len(res), 1)
+        for row in games_inserted:
+            self.assertIn(row[columns.index('eid')], games)
+            for idx, col in enumerate(columns):
+                if col not in games[row[columns.index('eid')]]:
+                    self.assertEqual(col, 'meridiem')
+                    self.assertIsNone((row[idx]))
+                    continue
 
-        row = res[0]
-        for idx, col in enumerate(columns):
-            if col not in game[1]:
-                self.assertEqual(col, 'meridiem')
-                self.assertIsNone((row[idx]))
-                continue
-
-            self.assertEqual(row[idx], game[1][col])
+                self.assertEqual(row[idx],
+                                 games[row[columns.index('eid')]][col])
 
     def test_insert_player_game_statistics_invalid_column(self):
         self.assertRaises(RuntimeError, self.db.insert_player_game_statistics,
@@ -677,9 +661,8 @@ class TestDatabase(unittest.TestCase):
             ['PHI', 'Philadelphia', 'Eagles', 'Philadelphia Eagles']
         ])
 
-        game = [
-            "2019122911",
-            {
+        game = {
+            "2019122911": {
                 "away": "PHI",
                 "day": 29,
                 "eid": "2019122911",
@@ -693,7 +676,7 @@ class TestDatabase(unittest.TestCase):
                 "week": 17,
                 "year": 2019
             }
-        ]
+        }
         self.db.insert_games(game)
 
         valid_columns \
@@ -705,7 +688,7 @@ class TestDatabase(unittest.TestCase):
             stats[c] = i + 1
 
         self.db.insert_player_game_statistics(player.player_id,
-                                              game[0], stats)
+                                              next(iter(game.keys())), stats)
 
         res = self.db.cursor.execute("SELECT * FROM "
                                      "Player_Game_Statistics").fetchall()
@@ -718,7 +701,7 @@ class TestDatabase(unittest.TestCase):
                 self.assertEqual(res[i], player.player_id)
                 continue
             elif c == 'eid':
-                self.assertEqual(res[i], game[0])
+                self.assertEqual(res[i], next(iter(game.keys())))
                 continue
             self.assertEqual(res[i], stats[c])
 
@@ -748,9 +731,8 @@ class TestDatabase(unittest.TestCase):
             ['PHI', 'Philadelphia', 'Eagles', 'Philadelphia Eagles']
         ])
 
-        game = [
-            "2019122911",
-            {
+        game = {
+            "2019122911": {
                 "away": "PHI",
                 "day": 29,
                 "eid": "2019122911",
@@ -764,7 +746,7 @@ class TestDatabase(unittest.TestCase):
                 "week": 17,
                 "year": 2019
             }
-        ]
+        }
         self.db.insert_games(game)
 
         stats = {
@@ -776,7 +758,7 @@ class TestDatabase(unittest.TestCase):
         }
 
         self.db.insert_player_game_statistics(player.player_id,
-                                              game[0], stats)
+                                              next(iter(game.keys())), stats)
 
         res = self.db.cursor.execute("SELECT * FROM "
                                      "Player_Game_Statistics").fetchall()
@@ -790,7 +772,7 @@ class TestDatabase(unittest.TestCase):
                 self.assertEqual(res[i], player.player_id)
                 continue
             elif c == 'eid':
-                self.assertEqual(res[i], game[0])
+                self.assertEqual(res[i], next(iter(game.keys())))
                 continue
             self.assertEqual(res[i], stats.get(c, 0))
 
@@ -803,9 +785,8 @@ class TestDatabase(unittest.TestCase):
                  ['PHI', 'Philadelphia', 'Eagles', 'Philadelphia Eagles']]
         self.db.insert_teams(teams)
 
-        game = [
-            "2019122911",
-            {
+        game = {
+            "2019122911": {
                 "away": "PHI",
                 "day": 29,
                 "eid": "2019122911",
@@ -819,7 +800,7 @@ class TestDatabase(unittest.TestCase):
                 "week": 17,
                 "year": 2019
             }
-        ]
+        }
         self.db.insert_games(game)
 
         valid_columns \
@@ -831,7 +812,7 @@ class TestDatabase(unittest.TestCase):
             stats[c] = i + 1
 
         self.db.insert_team_game_statistics(teams[0][0],
-                                            game[0], stats)
+                                            next(iter(game.keys())), stats)
 
         res = self.db.cursor.execute("SELECT * FROM "
                                      "Team_Game_Statistics").fetchall()
@@ -844,7 +825,7 @@ class TestDatabase(unittest.TestCase):
                 self.assertEqual(res[i], teams[0][0])
                 continue
             elif c == 'eid':
-                self.assertEqual(res[i], game[0])
+                self.assertEqual(res[i], next(iter(game.keys())))
                 continue
             self.assertEqual(res[i], stats[c])
 
@@ -853,9 +834,8 @@ class TestDatabase(unittest.TestCase):
                  ['PHI', 'Philadelphia', 'Eagles', 'Philadelphia Eagles']]
         self.db.insert_teams(teams)
 
-        game = [
-            "2019122911",
-            {
+        game = {
+            "2019122911": {
                 "away": "PHI",
                 "day": 29,
                 "eid": "2019122911",
@@ -869,7 +849,7 @@ class TestDatabase(unittest.TestCase):
                 "week": 17,
                 "year": 2019
             }
-        ]
+        }
         self.db.insert_games(game)
 
         valid_columns \
@@ -883,7 +863,7 @@ class TestDatabase(unittest.TestCase):
         }
 
         self.db.insert_team_game_statistics(teams[0][0],
-                                            game[0], stats)
+                                            next(iter(game.keys())), stats)
 
         res = self.db.cursor.execute("SELECT * FROM "
                                      "Team_Game_Statistics").fetchall()
@@ -896,6 +876,6 @@ class TestDatabase(unittest.TestCase):
                 self.assertEqual(res[i], teams[0][0])
                 continue
             elif c == 'eid':
-                self.assertEqual(res[i], game[0])
+                self.assertEqual(res[i], next(iter(game.keys())))
                 continue
             self.assertEqual(res[i], stats.get(c, 0))

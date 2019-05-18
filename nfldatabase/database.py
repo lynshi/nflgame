@@ -348,37 +348,57 @@ class NFLDatabase:
 
     def insert_games(self, games):
         """
-        Insert game schedule data from games into the Games table. If games is a
-        single item, it is converted to a list automatically.
+        Insert game schedule data from games into the Games table.
 
-        :param games: list of games following the format in
-            nflgame/schedule.json
+        :param games: OrderedDict of schedule data as in nflgames.sched.games
         :return: None
         """
 
-        if (isinstance(games, list) is False
-            or isinstance(games[0], list) is False) \
-                and (isinstance(games, tuple) is False
-                     or isinstance(games[0], tuple) is False):
-            games = [games]
+        def reset_defaults():
+            """
+            Reset default values for query and params after cursor execution.
 
-        query = """INSERT INTO Games Values """
-        params = []
+            :return: None
+            """
+            nonlocal query, params
+            query = """INSERT INTO Games Values """
+            params = []
+
+        def execute_insert():
+            """
+            Insert game data.
+
+            :return: None
+            """
+            nonlocal params, query
+            params = tuple(params)
+            query += row_placeholder * (len(params) // len(attributes))
+            self.cursor.execute(query[:-2], params)
+
         attributes = ['away', 'day', 'eid', 'gamekey', 'home', 'season_type',
                       'time', 'meridiem', 'wday', 'week', 'year']
-        for g in games:
-            g = g[1]
+
+        # SQLITE_MAX_VARIABLE_NUMBER is inaccessible and cannot be changed.
+        # The default value is 999, so that is what shall be used here.
+        max_games = 999
+        query = ''
+        params = []
+        row_placeholder = '(' + '?,' * (len(attributes) - 1) + '?), '
+        reset_defaults()
+        for eid, info in games.items():
             for attr in attributes:
                 if attr == 'meridiem':
-                    params.append(g.get('meridiem', None))
+                    params.append(info.get('meridiem', None))
                     continue
-                params.append(g[attr])
-        params = tuple(params)
+                params.append(info[attr])
 
-        row_placeholder = '(' + '?,' * (len(attributes) - 1) + '?), '
-        query += row_placeholder * len(games)
+            if len(params) + len(attributes) > max_games:
+                execute_insert()
+                reset_defaults()
 
-        self.cursor.execute(query[:-2], params)
+        if len(params) > 0:
+            execute_insert()
+
         self.commit()
 
     def insert_player_game_statistics(self, player_id, eid, player_stats):
