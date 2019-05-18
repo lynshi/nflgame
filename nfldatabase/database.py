@@ -409,7 +409,7 @@ class NFLDatabase:
         """
         Insert game schedule data from games into the Games table.
 
-        :param games: OrderedDict of schedule data as in nflgames.sched.games
+        :param games: OrderedDict of schedule data as in nflgame.sched.games
         :return: None
         """
 
@@ -451,15 +451,11 @@ class NFLDatabase:
                     continue
                 # Some abbreviations are not reliable
                 if attr in {'home', 'away'}:
-                    go_to_next = False
-                    for team in nflgame.teams:
-                        if info[attr] == team[0]:
-                            break
-                        elif info[attr] == team[-1]:
-                            params.append(team[0])
-                            go_to_next = True
-                            break
-                    if go_to_next is True:
+                    teams = self.cursor.execute("SELECT Team FROM Teams WHERE "
+                                                "alt_abbrev = ?",
+                                                (info[attr],)).fetchall()
+                    if len(teams) > 0:
+                        params.append(teams[0][0])
                         continue
 
                 params.append(info[attr])
@@ -575,12 +571,10 @@ class NFLDatabase:
                 + columns[:-2] + ') Values (?,?,' \
                 + '?,' * (len(team_stats) - 1) + '?)'
 
-        for t in nflgame.teams:
-            if team == t[0]:
-                break
-            elif team == t[-1]:
-                team = t[0]
-                break
+        teams = self.cursor.execute("SELECT Team FROM Teams WHERE "
+                                    "alt_abbrev = ?", (team,)).fetchall()
+        if len(teams) > 0:
+            team = teams[0][0]
 
         self.cursor.execute(query,
                             (team, eid) + tuple(team_stats.values()))
