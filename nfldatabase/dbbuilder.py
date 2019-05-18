@@ -90,7 +90,8 @@ class NFLdbBuilder:
     def _insert_game_statistics(self):
         """
         Insert game statistics for all players and teams in games in all phases
-        from 2009 to present.
+        from 2009 to present. Players with ids not found in nflgame.players are
+        ignored.
 
         :return: None
         """
