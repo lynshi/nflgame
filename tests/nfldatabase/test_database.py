@@ -31,6 +31,9 @@ class TestDatabase(unittest.TestCase):
             self.assertRaises(sql.OperationalError, self.db.cursor.execute,
                               "SELECT * FROM " + table)
 
+    def test_drop_invalid_table(self):
+        self.assertRaises(RuntimeError, self.db._drop_table, 'LOLno')
+
     def test_reset(self):
         self.db.reset()
         valid_tables = {'Players', 'Games', 'Teams', 'Player_Game_Statistics',
