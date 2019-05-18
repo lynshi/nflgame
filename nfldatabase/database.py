@@ -517,6 +517,16 @@ class NFLDatabase:
                 + columns[:-2] + ') Values (?,?,' \
                 + '?,' * (len(player_stats) - 1) + '?)'
 
+        # res = self.cursor.execute("SELECT * FROM Players WHERE player_id = ?",
+        #                           (player_id,)).fetchall()
+        # if len(res) == 0:
+        #     print('pid ' + player_id)
+        #
+        # res = self.cursor.execute("SELECT * FROM Games WHERE eid = ?",
+        #                           (eid,)).fetchall()
+        # if len(res) == 0:
+        #     print('eid ' + eid)
+
         self.cursor.execute(query,
                             (player_id, eid) + tuple(player_stats.values()))
         self.commit()
@@ -564,6 +574,13 @@ class NFLDatabase:
         query = 'INSERT INTO Team_Game_Statistics ' \
                 + columns[:-2] + ') Values (?,?,' \
                 + '?,' * (len(team_stats) - 1) + '?)'
+
+        for t in nflgame.teams:
+            if team == t[0]:
+                break
+            elif team == t[-1]:
+                team = t[0]
+                break
 
         self.cursor.execute(query,
                             (team, eid) + tuple(team_stats.values()))

@@ -59,7 +59,7 @@ class NFLdbBuilder:
         self._insert_teams()
         self._insert_games()
         self._insert_players()
-        self._game_statistics()
+        self._insert_game_statistics()
 
         return self.db
 
@@ -118,6 +118,9 @@ class NFLdbBuilder:
                         }
 
                         for p in players:
+                            if p.playerid not in nflgame.players:
+                                continue
+
                             self.db.insert_player_game_statistics(p.playerid,
                                                                   game.eid,
                                                                   p._stats)
