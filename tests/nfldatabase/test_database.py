@@ -21,6 +21,46 @@ class TestDatabase(unittest.TestCase):
         self.assertRaises(sql.ProgrammingError, self.db.cursor.execute,
                           'CREATE TABLE Failure')
 
+    def test_drop_table(self):
+        valid_tables = {'Players', 'Games', 'Teams', 'Player_Game_Statistics',
+                        'Team_Game_Statistics'}
+        for table in valid_tables:
+            # Make sure no exception here
+            self.db.cursor.execute("SELECT * FROM " + table)
+            self.db._drop_table(table)
+            self.assertRaises(sql.OperationalError, self.db.cursor.execute,
+                              "SELECT * FROM " + table)
+
+    def test_reset(self):
+        self.db.reset()
+        valid_tables = {'Players', 'Games', 'Teams', 'Player_Game_Statistics',
+                        'Team_Game_Statistics'}
+        for table in valid_tables:
+            self.assertRaises(sql.OperationalError, self.db.cursor.execute,
+                              "SELECT * FROM " + table)
+
+    def test_reset_with_data(self):
+        self.db.insert_teams(nflgame.teams)
+        self.db.insert_games(nflgame.sched.games)
+        self.db.insert_players(nflgame.players.values())
+
+        games = nflgame.games(year=2011, week=16,
+                              kind='REG')
+
+        for game in games:
+            players = nflgame.combine_game_stats([game])
+            for p in players:
+                self.db.insert_player_game_statistics(p.playerid,
+                                                      game.eid,
+                                                      p._stats)
+
+        self.db.reset()
+        valid_tables = {'Players', 'Games', 'Teams', 'Player_Game_Statistics',
+                        'Team_Game_Statistics'}
+        for table in valid_tables:
+            self.assertRaises(sql.OperationalError, self.db.cursor.execute,
+                              "SELECT * FROM " + table)
+
     def test_get_table_column_names(self):
         tables = {
             'Players': [
@@ -452,11 +492,46 @@ class TestDatabase(unittest.TestCase):
 
         columns = self.db.get_table_column_names('Players')
 
-        self.db.insert_players(list(players.values()))
+        self.db.insert_players(players.values())
         inserted = self.db.cursor.execute("SELECT * FROM Players")
 
         for res in inserted:
             self.assertIn(res[0], test_set)
+            player = players[res[0]]
+            for idx, name in enumerate(columns):
+                self.assertEqual(res[idx], getattr(player, name))
+
+    def test_insert_more_than_999_players(self):
+        info = {
+            "birthdate": "2/17/1995",
+            "college": "Georgia",
+            "first_name": "Sony",
+            "full_name": "Sony Michel",
+            "height": 71,
+            "last_name": "Michel",
+            "number": 26,
+            "position": "RB",
+            "profile_id": 2559842,
+            "profile_url": "http://www.nfl.com/player/sonymichel/2559842/profile",
+            "status": "ACT",
+            "team": "NE",
+            "weight": 215,
+            "years_pro": 2
+        }
+
+        players = {}
+        for i in range(999*3 + 500):
+            i = str(i).zfill(10)
+            p = {**info, **{'gsis_id': i}}
+            players[i] = Player(p)
+
+        columns = self.db.get_table_column_names('Players')
+
+        self.db.insert_players(players.values())
+        inserted = self.db.cursor.execute("SELECT * FROM Players")
+
+        for res in inserted:
+            self.assertIn(res[0], players)
             player = players[res[0]]
             for idx, name in enumerate(columns):
                 self.assertEqual(res[idx], getattr(player, name))

@@ -58,7 +58,8 @@ class NFLdbBuilder:
 
         self._insert_teams()
         self._insert_games()
-        self._insert_players_and_game_statistics()
+        self._insert_players()
+        self._game_statistics()
 
         return self.db
 
@@ -78,20 +79,24 @@ class NFLdbBuilder:
         """
         self.db.insert_games(nflgame.sched.games)
 
-    def _insert_players_and_game_statistics(self):
+    def _insert_players(self):
         """
-        Insert all players present from 2009-present. In addition, insert game
-        statistics for all players and teams in games in all phases from 2009
-        to present.
+        Insert all player information.
+
+        :return: None
+        """
+        self.db.insert_players(nflgame.players.values())
+
+    def _insert_game_statistics(self):
+        """
+        Insert game statistics for all players and teams in games in all phases
+        from 2009 to present.
 
         :return: None
         """
 
-        stat_columns = set()
         phases = [('PRE', 4), ('REG', 17), ('POST', 4)]
         seasons = [i for i in range(2009, datetime.datetime.now().year)]
-
-        inserted_player_ids = set()
 
         # I acknowledge this is terribly ugly.
         # This can potentially be multi-threaded, but I figured the speedup is
@@ -113,10 +118,6 @@ class NFLdbBuilder:
                         }
 
                         for p in players:
-                            if p.playerid not in inserted_player_ids:
-                                self.db.insert_players(
-                                    nflgame.players[p.playerid])
-
                             self.db.insert_player_game_statistics(p.playerid,
                                                                   game.eid,
                                                                   p._stats)
@@ -125,5 +126,3 @@ class NFLdbBuilder:
                         for team, stats in team_stats.items():
                             self.db.insert_team_game_statistics(team, game.eid,
                                                                 stats)
-
-        return stat_columns

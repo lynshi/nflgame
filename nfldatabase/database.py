@@ -1,4 +1,5 @@
 import sqlite3 as sql
+import nflgame
 
 
 class NFLDatabase:
@@ -30,6 +31,36 @@ class NFLDatabase:
         res = self.cursor.execute('PRAGMA table_info(' + table_name +
                                   ')').fetchall()
         return [col[1] for col in res]
+
+    def _drop_table(self, table_name):
+        """
+        Drop table table_name
+
+        :param table_name: name of table to drop
+        :return: None
+
+        :raises RuntimeError: if table_name is not a valid table name
+        """
+        valid_tables = {'Players', 'Games', 'Teams', 'Player_Game_Statistics',
+                        'Team_Game_Statistics'}
+        if table_name not in valid_tables:
+            raise RuntimeError(table_name + ' is not a valid table')
+
+        self.cursor.execute("DROP TABLE " + table_name)
+        self.commit()
+
+    def reset(self):
+        """
+        Drop all tables in database.
+
+        :return: None
+        """
+
+        # Ordered this way to prevent key errors on drop
+        valid_tables = ['Player_Game_Statistics', 'Team_Game_Statistics',
+                        'Games', 'Teams', 'Players', ]
+        for table in valid_tables:
+            self._drop_table(table)
 
     def close(self):
         """
@@ -286,28 +317,58 @@ class NFLDatabase:
         :param players: list of Player objects whose data to insert
         :return: None
         """
-        if isinstance(players, list) is False \
-                and isinstance(players, tuple) is False:
+
+        if isinstance(players, nflgame.player.Player) is True:
             players = [players]
 
-        query = """INSERT INTO Players Values """
+        if isinstance(players, list) is False \
+                and isinstance(players, tuple) is False:
+            players = list(players)
+
+        def reset_defaults():
+            """
+            Reset default values for query and params after cursor execution.
+
+            :return: None
+            """
+            nonlocal query, params
+            query = """INSERT INTO Players Values """
+            params = []
+
+        def execute_insert():
+            """
+            Insert game data.
+
+            :return: None
+            """
+            nonlocal params, query
+            params = tuple(params)
+            query += row_placeholder * (len(params) // len(attributes))
+            self.cursor.execute(query[:-2], params)
+
+        query = ''
+        params = []
         attributes = [
             'player_id', 'gsis_name', 'full_name', 'first_name',
             'last_name', 'team', 'position', 'profile_id', 'profile_url',
             'uniform_number', 'birthdate', 'college', 'height', 'weight',
             'years_pro', 'status'
         ]
+        row_placeholder = '(' + '?,' * (len(attributes) - 1) + '?), '
 
-        params = []
+        reset_defaults()
+        max_games = 999  # From SQLite
         for p in players:
             for a in attributes:
                 params.append(getattr(p, a))
-        params = tuple(params)
 
-        row_placeholder = '(' + '?,' * (len(attributes) - 1) + '?), '
-        query += row_placeholder * len(players)
+            if len(params) + len(attributes) > max_games:
+                execute_insert()
+                reset_defaults()
 
-        self.cursor.execute(query[:-2], params)
+        if len(params) > 0:
+            execute_insert()
+
         self.commit()
 
     def insert_teams(self, teams):
@@ -326,10 +387,8 @@ class NFLDatabase:
         :return: None
         """
 
-        if (isinstance(teams, list) is False
-            or isinstance(teams[0], list) is False) \
-                and (isinstance(teams, tuple) is False
-                     or isinstance(teams[0], tuple) is False):
+        if isinstance(teams[0], list) is False \
+                and isinstance(teams[0], tuple) is False:
             teams = [teams]
 
         query = """INSERT INTO Teams Values """
@@ -390,6 +449,19 @@ class NFLDatabase:
                 if attr == 'meridiem':
                     params.append(info.get('meridiem', None))
                     continue
+                # Some abbreviations are not reliable
+                if attr in {'home', 'away'}:
+                    go_to_next = False
+                    for team in nflgame.teams:
+                        if info[attr] == team[0]:
+                            break
+                        elif info[attr] == team[-1]:
+                            params.append(team[0])
+                            go_to_next = True
+                            break
+                    if go_to_next is True:
+                        continue
+
                 params.append(info[attr])
 
             if len(params) + len(attributes) > max_games:
