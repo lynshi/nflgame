@@ -18,4 +18,3 @@ ve
 *.bak
 __pycache__
 venv
-db
