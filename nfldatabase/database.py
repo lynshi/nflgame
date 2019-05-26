@@ -484,6 +484,14 @@ class NFLDatabase:
             a valid statistic name
         """
 
+        if len(player_stats.values()) == 0:
+            self.cursor.execute("""
+                INSERT INTO Player_Game_Statistics (player_id, eid) 
+                Values (?,?)
+            """, (player_id, eid))
+
+            return
+
         valid_columns = {
             'defense_ast', 'defense_ffum', 'defense_int', 'defense_sk',
             'defense_tkl', 'fumbles_lost', 'fumbles_rcv', 'fumbles_tot',
@@ -541,6 +549,19 @@ class NFLDatabase:
         :raises RuntimeError: if any key in team_stats does not correspond to
             a valid statistic name
         """
+
+        if len(team_stats.values()) == 0:
+            teams = self.cursor.execute("SELECT Team FROM Teams WHERE "
+                                        "alt_abbrev = ?", (team,)).fetchall()
+            if len(teams) > 0:
+                team = teams[0][0]
+
+            self.cursor.execute("""
+                INSERT INTO Team_Game_Statistics (team, eid) 
+                Values (?,?)
+            """, (team, eid))
+
+            return
 
         valid_columns = {
             'defense_ast', 'defense_ffum', 'defense_int', 'defense_sk',

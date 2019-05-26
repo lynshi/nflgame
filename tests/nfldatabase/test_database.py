@@ -854,6 +854,71 @@ class TestDatabase(unittest.TestCase):
                 continue
             self.assertEqual(res[i], stats.get(c, 0))
 
+    def test_insert_player_game_statistics_no_columns(self):
+        player_data = {
+            "birthdate": "2/9/1997",
+            "college": "Penn State",
+            "first_name": "Saquon",
+            "full_name": "Saquon Barkley",
+            "gsis_id": "00-0034844",
+            "height": 72,
+            "last_name": "Barkley",
+            "number": 26,
+            "position": "RB",
+            "profile_id": 2559901,
+            "profile_url": "http://www.nfl.com/player/saquonbarkley/2559901/profile",
+            "status": "ACT",
+            "team": "NYG",
+            "weight": 233,
+            "years_pro": 2
+        }
+        player = Player(player_data)
+        self.db.insert_players(player)
+
+        self.db.insert_teams([
+            ['NYG', 'New York G', 'Giants', 'New York Giants'],
+            ['PHI', 'Philadelphia', 'Eagles', 'Philadelphia Eagles']
+        ])
+
+        game = {
+            "2019122911": {
+                "away": "PHI",
+                "day": 29,
+                "eid": "2019122911",
+                "gamekey": "58151",
+                "home": "NYG",
+                "meridiem": "PM",
+                "month": 12,
+                "season_type": "REG",
+                "time": "1:00",
+                "wday": "Sun",
+                "week": 17,
+                "year": 2019
+            }
+        }
+        self.db.insert_games(game)
+
+        stats = {}
+
+        self.db.insert_player_game_statistics(player.player_id,
+                                              next(iter(game.keys())), stats)
+
+        res = self.db.cursor.execute("SELECT * FROM "
+                                     "Player_Game_Statistics").fetchall()
+        self.assertEqual(len(res), 1)
+        res = res[0]
+
+        valid_columns = self.db.get_table_column_names('Player_Game_Statistics')
+        self.assertEqual(len(res), len(valid_columns))
+        for i, c in enumerate(valid_columns):
+            if c == 'player_id':
+                self.assertEqual(res[i], player.player_id)
+                continue
+            elif c == 'eid':
+                self.assertEqual(res[i], next(iter(game.keys())))
+                continue
+            self.assertEqual(res[i], stats.get(c, 0))
+
     def test_insert_team_game_statistics_invalid_column(self):
         self.assertRaises(RuntimeError, self.db.insert_team_game_statistics,
                           'NYG', '2015102500', {'failure': 42})
@@ -958,6 +1023,51 @@ class TestDatabase(unittest.TestCase):
                 continue
             self.assertEqual(res[i], stats.get(c, 0))
 
+    def test_insert_team_game_statistics_no_columns(self):
+        teams = [['NYG', 'New York G', 'Giants', 'New York Giants'],
+                 ['PHI', 'Philadelphia', 'Eagles', 'Philadelphia Eagles']]
+        self.db.insert_teams(teams)
+
+        game = {
+            "2019122911": {
+                "away": "PHI",
+                "day": 29,
+                "eid": "2019122911",
+                "gamekey": "58151",
+                "home": "NYG",
+                "meridiem": "PM",
+                "month": 12,
+                "season_type": "REG",
+                "time": "1:00",
+                "wday": "Sun",
+                "week": 17,
+                "year": 2019
+            }
+        }
+        self.db.insert_games(game)
+
+        valid_columns \
+            = list(self.db.get_table_column_names('Team_Game_Statistics'))
+        stats = {}
+
+        self.db.insert_team_game_statistics(teams[0][0],
+                                            next(iter(game.keys())), stats)
+
+        res = self.db.cursor.execute("SELECT * FROM "
+                                     "Team_Game_Statistics").fetchall()
+        self.assertEqual(len(res), 1)
+        res = res[0]
+
+        self.assertEqual(len(res), len(valid_columns))
+        for i, c in enumerate(valid_columns):
+            if c == 'team':
+                self.assertEqual(res[i], teams[0][0])
+                continue
+            elif c == 'eid':
+                self.assertEqual(res[i], next(iter(game.keys())))
+                continue
+            self.assertEqual(res[i], stats.get(c, 0))
+
     def test_insert_team_game_statistics_alternate_abbreviation(self):
         teams = [['JAC', 'New York G', 'Giants', 'New York Giants', 'JAX'],
                  ['PHI', 'Philadelphia', 'Eagles', 'Philadelphia Eagles']]
@@ -1006,3 +1116,48 @@ class TestDatabase(unittest.TestCase):
                 self.assertEqual(res[i], next(iter(game.keys())))
                 continue
             self.assertEqual(res[i], stats[c])
+
+    def test_insert_team_game_statistics_alternate_abbreviation_no_data(self):
+        teams = [['JAC', 'New York G', 'Giants', 'New York Giants', 'JAX'],
+                 ['PHI', 'Philadelphia', 'Eagles', 'Philadelphia Eagles']]
+        self.db.insert_teams(teams)
+
+        game = {
+            "2019122911": {
+                "away": "PHI",
+                "day": 29,
+                "eid": "2019122911",
+                "gamekey": "58151",
+                "home": "JAX",
+                "meridiem": "PM",
+                "month": 12,
+                "season_type": "REG",
+                "time": "1:00",
+                "wday": "Sun",
+                "week": 17,
+                "year": 2019
+            }
+        }
+        self.db.insert_games(game)
+
+        valid_columns \
+            = list(self.db.get_table_column_names('Team_Game_Statistics'))
+
+        stats = {}
+        self.db.insert_team_game_statistics(teams[0][-1],
+                                            next(iter(game.keys())), stats)
+
+        res = self.db.cursor.execute("SELECT * FROM "
+                                     "Team_Game_Statistics").fetchall()
+        self.assertEqual(len(res), 1)
+        res = res[0]
+
+        self.assertEqual(len(res), len(valid_columns))
+        for i, c in enumerate(valid_columns):
+            if c == 'team':
+                self.assertEqual(res[i], teams[0][0])
+                continue
+            elif c == 'eid':
+                self.assertEqual(res[i], next(iter(game.keys())))
+                continue
+            self.assertEqual(res[i], 0)

@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+from nfldatabase.dbbuilder import NFLdbBuilder
+
+import os
+import sys
+
+
+def build_db():
+    db = NFLdbBuilder()
+    db.run()
+
+
+if __name__ == '__main__':
+    build_db()

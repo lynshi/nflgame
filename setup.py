@@ -50,12 +50,14 @@ setup(
         'Topic :: Database',
     ],
     platforms='ANY',
-    packages=['nflgame'],
+    packages=['nflgame', 'nfldatabase'],
     package_data={'nflgame': ['players.json', 'schedule.json',
-                              'gamecenter-json/*.json.gz']},
+                              'gamecenter-json/*.json.gz'],
+                  'nfldatabase': ['nfl.db']},
     data_files=[('share/doc/nflgame', ['README.md', 'CHANGELOG', 'UNLICENSE',
                                        'longdesc.rst']),
                 ('share/doc/nflgame/doc', glob('doc/nflgame/*.html'))],
-    scripts=['scripts/nflgame-update-players','scripts/nflgame-update-schedule'],
+    scripts=['scripts/nflgame-update-players','scripts/nflgame-update-schedule',
+             'scripts/nfldatabase-update-db'],
     install_requires=install_requires
 )
