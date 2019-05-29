@@ -5,6 +5,7 @@ import unittest
 import nflgame
 from nflgame.player import Player
 import nfldatabase.database as nfldb
+from nfldatabase.dbbuilder import find_stat_columns
 
 
 class TestDatabase(unittest.TestCase):
@@ -54,6 +55,9 @@ class TestDatabase(unittest.TestCase):
             'kicking_fgb', 'defense_sk', 'puntret_tot',
             'penalty_yds', 'penalty', 'receiving_yac_yds'
         }
+
+    def test_valid_stat_columns(self):
+        self.assertSetEqual(self.db._valid_stat_columns, find_stat_columns())
 
     def test_close(self):
         self.db.close()
