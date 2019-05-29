@@ -35,7 +35,7 @@ def find_stat_columns():
 
 
 class NFLdbBuilder:
-    def __init__(self, db_file_name=None):
+    def __init__(self, db_file_name=None, reset=False):
         """
         Build a SQLite3 database, for existing NFL data,
         in the file found at db_file_name.
@@ -50,6 +50,11 @@ class NFLdbBuilder:
             self._is_new_db = True
 
         self.db = NFLDatabase(db_file_name)
+
+        if reset is True:
+            self.db.reset()
+            self._is_new_db = True
+
         if self._is_new_db is True:
             self._create_tables()
 
@@ -65,23 +70,16 @@ class NFLdbBuilder:
         self.db.create_player_game_statistics_table()
         self.db.create_team_game_statistics_table()
 
-    def run(self, reset=False, update=False):
+    def run(self, update=False):
         """
         Run data insertion process. Teams are inserted first due to foreign key
         constraints, then players and games.
 
-        :param reset: If True, drop all tables and repopulate. Else,
-            only add new game statistics starting from the last game in the
-            database.
         :param update: If True, only inserts new data into database per
             specifications in self._insert_game_statistics(). Ignored if reset
             is True.
         :return: NFLDatabase instance
         """
-
-        if reset is True:
-            self.db.reset()
-            self._is_new_db = True
 
         if self._is_new_db is True:
             for func in [self._insert_teams, self._insert_games,
