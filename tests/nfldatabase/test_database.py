@@ -16,6 +16,45 @@ class TestDatabase(unittest.TestCase):
         self.db.create_player_game_statistics_table()
         self.db.create_team_game_statistics_table()
 
+        self.stat_columns = {
+            'punting_touchback', 'receiving_tds', 'punting_blk',
+            'defense_sk_yds', 'kicking_i20', 'kicking_all_yds',
+            'defense_tkl', 'rushing_tds', 'rushing_yds',
+            'receiving_tar', 'passing_cmp', 'kicking_rec',
+            'kicking_fgmissed', 'kicking_fgm_yds',
+            'fumbles_notforced', 'kicking_touchback',
+            'fumbles_lost', 'defense_pass_def',
+            'passing_twoptm', 'kicking_xpmade', 'kickret_ret',
+            'fumbles_forced', 'fumbles_rec', 'kicking_xpb',
+            'punting_tot', 'punting_i20',
+            'defense_tkl_loss_yds', 'defense_frec',
+            'passing_incmp', 'defense_frec_tds',
+            'fumbles_rec_tds', 'passing_incmp_air_yds',
+            'fumbles_rec_yds', 'defense_ffum', 'puntret_yds',
+            'receiving_rec', 'rushing_att', 'passing_att',
+            'kicking_fgm', 'kicking_rec_tds', 'kicking_yds',
+            'rushing_twoptm', 'defense_tkl_primary',
+            'passing_twopta', 'defense_frec_yds',
+            'defense_int_tds', 'defense_xpblk', 'defense_fgblk',
+            'kicking_tot', 'defense_int_yds',
+            'kicking_fgmissed_yds', 'defense_safe',
+            'receiving_twoptm', 'passing_twoptmissed',
+            'passing_int', 'passing_cmp_air_yds',
+            'receiving_twopta', 'defense_qbhit',
+            'kicking_xpmissed', 'passing_yds', 'passing_tds',
+            'kicking_fga', 'defense_puntblk', 'kickret_yds',
+            'defense_ast', 'receiving_twoptmissed',
+            'punting_yds', 'defense_tds', 'passing_sk_yds',
+            'kickret_tds', 'rushing_twopta', 'fumbles_oob',
+            'fumbles_tot', 'defense_misc_tds',
+            'defense_tkl_loss', 'defense_misc_yds',
+            'passing_sk', 'defense_int', 'puntret_fair',
+            'kickret_fair', 'receiving_yds',
+            'rushing_twoptmissed', 'puntret_tds', 'kicking_xpa',
+            'kicking_fgb', 'defense_sk', 'puntret_tot',
+            'penalty_yds', 'penalty', 'receiving_yac_yds'
+        }
+
     def test_close(self):
         self.db.close()
         self.assertRaises(sql.ProgrammingError, self.db.cursor.execute,
@@ -51,7 +90,7 @@ class TestDatabase(unittest.TestCase):
                               kind='REG')
 
         for game in games:
-            players = nflgame.combine_game_stats([game])
+            players = nflgame.combine_play_stats([game])
             for p in players:
                 self.db.insert_player_game_statistics(p.playerid,
                                                       game.eid,
@@ -66,57 +105,27 @@ class TestDatabase(unittest.TestCase):
 
     def test_get_table_column_names(self):
         tables = {
-            'Players': [
+            'Players': {
                 'player_id', 'gsis_name', 'full_name', 'first_name',
                 'last_name', 'team', 'position', 'profile_id', 'profile_url',
                 'uniform_number', 'birthdate', 'college', 'height', 'weight',
                 'years_pro', 'status'
-            ],
-            'Teams': ['team', 'city', 'team_name', 'full_name', 'alt_abbrev'],
-            'Player_Game_Statistics': [
-                'player_id', 'eid', 'defense_ast', 'defense_ffum',
-                'defense_int', 'defense_sk', 'defense_tkl', 'fumbles_lost',
-                'fumbles_rcv', 'fumbles_tot', 'fumbles_trcv', 'fumbles_yds',
-                'kicking_fga', 'kicking_fgm', 'kicking_fgyds', 'kicking_totpfg',
-                'kicking_xpa', 'kicking_xpb', 'kicking_xpmade',
-                'kicking_xpmissed', 'kicking_xptot', 'kickret_avg',
-                'kickret_lng', 'kickret_lngtd', 'kickret_ret', 'kickret_tds',
-                'passing_att', 'passing_cmp', 'passing_ints', 'passing_tds',
-                'passing_twopta', 'passing_twoptm', 'passing_yds',
-                'punting_avg', 'punting_i20', 'punting_lng', 'punting_pts',
-                'punting_yds', 'puntret_avg', 'puntret_lng', 'puntret_lngtd',
-                'puntret_ret', 'puntret_tds', 'receiving_lng',
-                'receiving_lngtd', 'receiving_rec', 'receiving_tds',
-                'receiving_twopta', 'receiving_twoptm', 'receiving_yds',
-                'rushing_att', 'rushing_lng', 'rushing_lngtd', 'rushing_tds',
-                'rushing_twopta', 'rushing_twoptm', 'rushing_yds'
-            ],
-            'Team_Game_Statistics': [
-                'team', 'eid', 'defense_ast', 'defense_ffum',
-                'defense_int', 'defense_sk', 'defense_tkl', 'fumbles_lost',
-                'fumbles_rcv', 'fumbles_tot', 'fumbles_trcv', 'fumbles_yds',
-                'kicking_fga', 'kicking_fgm', 'kicking_fgyds', 'kicking_totpfg',
-                'kicking_xpa', 'kicking_xpb', 'kicking_xpmade',
-                'kicking_xpmissed', 'kicking_xptot', 'kickret_avg',
-                'kickret_lng', 'kickret_lngtd', 'kickret_ret', 'kickret_tds',
-                'passing_att', 'passing_cmp', 'passing_ints', 'passing_tds',
-                'passing_twopta', 'passing_twoptm', 'passing_yds',
-                'punting_avg', 'punting_i20', 'punting_lng', 'punting_pts',
-                'punting_yds', 'puntret_avg', 'puntret_lng', 'puntret_lngtd',
-                'puntret_ret', 'puntret_tds', 'receiving_lng',
-                'receiving_lngtd', 'receiving_rec', 'receiving_tds',
-                'receiving_twopta', 'receiving_twoptm', 'receiving_yds',
-                'rushing_att', 'rushing_lng', 'rushing_lngtd', 'rushing_tds',
-                'rushing_twopta', 'rushing_twoptm', 'rushing_yds'
-            ],
-            'Games': [
+            },
+            'Teams': {'team', 'city', 'team_name', 'full_name', 'alt_abbrev'},
+            'Player_Game_Statistics': self.stat_columns.union({
+                'player_id', 'eid'
+            }),
+            'Team_Game_Statistics': self.stat_columns.union({
+                'team', 'eid'
+            }),
+            'Games': {
                 'away', 'day', 'eid', 'gamekey', 'home', 'season_type', 'time',
                 'meridiem', 'wday', 'week', 'year'
-            ]
+            }
         }
         for t_name, t_contents in tables.items():
             columns = set(self.db.get_table_column_names(t_name))
-            self.assertSetEqual(columns, set(t_contents))
+            self.assertSetEqual(columns, t_contents)
 
     def test_get_table_column_names_invalid_column(self):
         self.assertRaises(RuntimeError, self.db.get_table_column_names,
@@ -243,63 +252,12 @@ class TestDatabase(unittest.TestCase):
 
         expected_columns = {
             'eid': ('VARCHAR(10)', 1, None, 2),
-            'player_id': ('CHAR(10)', 1, None, 1),
-            'defense_ast': ('REAL', 0, '0', 0),
-            'defense_ffum': ('REAL', 0, '0', 0),
-            'defense_int': ('REAL', 0, '0', 0),
-            'defense_sk': ('REAL', 0, '0', 0),
-            'defense_tkl': ('REAL', 0, '0', 0),
-            'fumbles_lost': ('REAL', 0, '0', 0),
-            'fumbles_rcv': ('REAL', 0, '0', 0),
-            'fumbles_tot': ('REAL', 0, '0', 0),
-            'fumbles_trcv': ('REAL', 0, '0', 0),
-            'fumbles_yds': ('REAL', 0, '0', 0),
-            'kicking_fga': ('REAL', 0, '0', 0),
-            'kicking_fgm': ('REAL', 0, '0', 0),
-            'kicking_fgyds': ('REAL', 0, '0', 0),
-            'kicking_totpfg': ('REAL', 0, '0', 0),
-            'kicking_xpa': ('REAL', 0, '0', 0),
-            'kicking_xpb': ('REAL', 0, '0', 0),
-            'kicking_xpmade': ('REAL', 0, '0', 0),
-            'kicking_xpmissed': ('REAL', 0, '0', 0),
-            'kicking_xptot': ('REAL', 0, '0', 0),
-            'kickret_avg': ('REAL', 0, '0', 0),
-            'kickret_lng': ('REAL', 0, '0', 0),
-            'kickret_lngtd': ('REAL', 0, '0', 0),
-            'kickret_ret': ('REAL', 0, '0', 0),
-            'kickret_tds': ('REAL', 0, '0', 0),
-            'passing_att': ('REAL', 0, '0', 0),
-            'passing_cmp': ('REAL', 0, '0', 0),
-            'passing_ints': ('REAL', 0, '0', 0),
-            'passing_tds': ('REAL', 0, '0', 0),
-            'passing_twopta': ('REAL', 0, '0', 0),
-            'passing_twoptm': ('REAL', 0, '0', 0),
-            'passing_yds': ('REAL', 0, '0', 0),
-            'punting_avg': ('REAL', 0, '0', 0),
-            'punting_i20': ('REAL', 0, '0', 0),
-            'punting_lng': ('REAL', 0, '0', 0),
-            'punting_pts': ('REAL', 0, '0', 0),
-            'punting_yds': ('REAL', 0, '0', 0),
-            'puntret_avg': ('REAL', 0, '0', 0),
-            'puntret_lng': ('REAL', 0, '0', 0),
-            'puntret_lngtd': ('REAL', 0, '0', 0),
-            'puntret_ret': ('REAL', 0, '0', 0),
-            'puntret_tds': ('REAL', 0, '0', 0),
-            'receiving_lng': ('REAL', 0, '0', 0),
-            'receiving_lngtd': ('REAL', 0, '0', 0),
-            'receiving_rec': ('REAL', 0, '0', 0),
-            'receiving_tds': ('REAL', 0, '0', 0),
-            'receiving_twopta': ('REAL', 0, '0', 0),
-            'receiving_twoptm': ('REAL', 0, '0', 0),
-            'receiving_yds': ('REAL', 0, '0', 0),
-            'rushing_att': ('REAL', 0, '0', 0),
-            'rushing_lng': ('REAL', 0, '0', 0),
-            'rushing_lngtd': ('REAL', 0, '0', 0),
-            'rushing_tds': ('REAL', 0, '0', 0),
-            'rushing_twopta': ('REAL', 0, '0', 0),
-            'rushing_twoptm': ('REAL', 0, '0', 0),
-            'rushing_yds': ('REAL', 0, '0', 0),
+            'player_id': ('CHAR(10)', 1, None, 1)
         }
+        tup = ('REAL', 0, '0', 0)
+        stat_cols = self.stat_columns
+        for s in stat_cols:
+            expected_columns[s] = tup
 
         for col in res:
             column = col[1]
@@ -320,63 +278,12 @@ class TestDatabase(unittest.TestCase):
 
         expected_columns = {
             'eid': ('VARCHAR(10)', 1, None, 2),
-            'team': ('VARCHAR(3)', 1, None, 1),
-            'defense_ast': ('REAL', 0, '0', 0),
-            'defense_ffum': ('REAL', 0, '0', 0),
-            'defense_int': ('REAL', 0, '0', 0),
-            'defense_sk': ('REAL', 0, '0', 0),
-            'defense_tkl': ('REAL', 0, '0', 0),
-            'fumbles_lost': ('REAL', 0, '0', 0),
-            'fumbles_rcv': ('REAL', 0, '0', 0),
-            'fumbles_tot': ('REAL', 0, '0', 0),
-            'fumbles_trcv': ('REAL', 0, '0', 0),
-            'fumbles_yds': ('REAL', 0, '0', 0),
-            'kicking_fga': ('REAL', 0, '0', 0),
-            'kicking_fgm': ('REAL', 0, '0', 0),
-            'kicking_fgyds': ('REAL', 0, '0', 0),
-            'kicking_totpfg': ('REAL', 0, '0', 0),
-            'kicking_xpa': ('REAL', 0, '0', 0),
-            'kicking_xpb': ('REAL', 0, '0', 0),
-            'kicking_xpmade': ('REAL', 0, '0', 0),
-            'kicking_xpmissed': ('REAL', 0, '0', 0),
-            'kicking_xptot': ('REAL', 0, '0', 0),
-            'kickret_avg': ('REAL', 0, '0', 0),
-            'kickret_lng': ('REAL', 0, '0', 0),
-            'kickret_lngtd': ('REAL', 0, '0', 0),
-            'kickret_ret': ('REAL', 0, '0', 0),
-            'kickret_tds': ('REAL', 0, '0', 0),
-            'passing_att': ('REAL', 0, '0', 0),
-            'passing_cmp': ('REAL', 0, '0', 0),
-            'passing_ints': ('REAL', 0, '0', 0),
-            'passing_tds': ('REAL', 0, '0', 0),
-            'passing_twopta': ('REAL', 0, '0', 0),
-            'passing_twoptm': ('REAL', 0, '0', 0),
-            'passing_yds': ('REAL', 0, '0', 0),
-            'punting_avg': ('REAL', 0, '0', 0),
-            'punting_i20': ('REAL', 0, '0', 0),
-            'punting_lng': ('REAL', 0, '0', 0),
-            'punting_pts': ('REAL', 0, '0', 0),
-            'punting_yds': ('REAL', 0, '0', 0),
-            'puntret_avg': ('REAL', 0, '0', 0),
-            'puntret_lng': ('REAL', 0, '0', 0),
-            'puntret_lngtd': ('REAL', 0, '0', 0),
-            'puntret_ret': ('REAL', 0, '0', 0),
-            'puntret_tds': ('REAL', 0, '0', 0),
-            'receiving_lng': ('REAL', 0, '0', 0),
-            'receiving_lngtd': ('REAL', 0, '0', 0),
-            'receiving_rec': ('REAL', 0, '0', 0),
-            'receiving_tds': ('REAL', 0, '0', 0),
-            'receiving_twopta': ('REAL', 0, '0', 0),
-            'receiving_twoptm': ('REAL', 0, '0', 0),
-            'receiving_yds': ('REAL', 0, '0', 0),
-            'rushing_att': ('REAL', 0, '0', 0),
-            'rushing_lng': ('REAL', 0, '0', 0),
-            'rushing_lngtd': ('REAL', 0, '0', 0),
-            'rushing_tds': ('REAL', 0, '0', 0),
-            'rushing_twopta': ('REAL', 0, '0', 0),
-            'rushing_twoptm': ('REAL', 0, '0', 0),
-            'rushing_yds': ('REAL', 0, '0', 0),
+            'team': ('VARCHAR(3)', 1, None, 1)
         }
+        tup = ('REAL', 0, '0', 0)
+        stat_cols = self.stat_columns
+        for s in stat_cols:
+            expected_columns[s] = tup
 
         for col in res:
             column = col[1]

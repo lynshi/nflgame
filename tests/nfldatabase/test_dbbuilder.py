@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from nfldatabase.dbbuilder import NFLdbBuilder
+from nfldatabase.dbbuilder import NFLdbBuilder, find_stat_columns
 import nflgame
 
 
@@ -21,23 +21,44 @@ class TestNFLdbBuilder(unittest.TestCase):
         self.assertSetEqual(table_names, expected_table_names)
 
     def test_find_stat_columns(self):
-        found_columns = self.db._find_stat_columns()
+        found_columns = find_stat_columns()
         expected_columns = {
-            'defense_ast', 'defense_ffum', 'defense_int', 'defense_sk',
-            'defense_tkl', 'fumbles_lost', 'fumbles_rcv', 'fumbles_tot',
-            'fumbles_trcv', 'fumbles_yds', 'kicking_fga', 'kicking_fgm',
-            'kicking_fgyds', 'kicking_totpfg', 'kicking_xpa', 'kicking_xpb',
-            'kicking_xpmade', 'kicking_xpmissed', 'kicking_xptot',
-            'kickret_avg', 'kickret_lng', 'kickret_lngtd', 'kickret_ret',
-            'kickret_tds', 'passing_att', 'passing_cmp', 'passing_ints',
-            'passing_tds', 'passing_twopta', 'passing_twoptm', 'passing_yds',
-            'punting_avg', 'punting_i20', 'punting_lng', 'punting_pts',
-            'punting_yds', 'puntret_avg', 'puntret_lng', 'puntret_lngtd',
-            'puntret_ret', 'puntret_tds', 'receiving_lng', 'receiving_lngtd',
-            'receiving_rec', 'receiving_tds', 'receiving_twopta',
-            'receiving_twoptm', 'receiving_yds', 'rushing_att', 'rushing_lng',
-            'rushing_lngtd', 'rushing_tds', 'rushing_twopta', 'rushing_twoptm',
-            'rushing_yds'
+            'punting_touchback', 'receiving_tds', 'punting_blk',
+            'defense_sk_yds', 'kicking_i20', 'kicking_all_yds',
+            'defense_tkl', 'rushing_tds', 'rushing_yds',
+            'receiving_tar', 'passing_cmp', 'kicking_rec',
+            'kicking_fgmissed', 'kicking_fgm_yds',
+            'fumbles_notforced', 'kicking_touchback',
+            'fumbles_lost', 'defense_pass_def',
+            'passing_twoptm', 'kicking_xpmade', 'kickret_ret',
+            'fumbles_forced', 'fumbles_rec', 'kicking_xpb',
+            'punting_tot', 'punting_i20',
+            'defense_tkl_loss_yds', 'defense_frec',
+            'passing_incmp', 'defense_frec_tds',
+            'fumbles_rec_tds', 'passing_incmp_air_yds',
+            'fumbles_rec_yds', 'defense_ffum', 'puntret_yds',
+            'receiving_rec', 'rushing_att', 'passing_att',
+            'kicking_fgm', 'kicking_rec_tds', 'kicking_yds',
+            'rushing_twoptm', 'defense_tkl_primary',
+            'passing_twopta', 'defense_frec_yds',
+            'defense_int_tds', 'defense_xpblk', 'defense_fgblk',
+            'kicking_tot', 'defense_int_yds',
+            'kicking_fgmissed_yds', 'defense_safe',
+            'receiving_twoptm', 'passing_twoptmissed',
+            'passing_int', 'passing_cmp_air_yds',
+            'receiving_twopta', 'defense_qbhit',
+            'kicking_xpmissed', 'passing_yds', 'passing_tds',
+            'kicking_fga', 'defense_puntblk', 'kickret_yds',
+            'defense_ast', 'receiving_twoptmissed',
+            'punting_yds', 'defense_tds', 'passing_sk_yds',
+            'kickret_tds', 'rushing_twopta', 'fumbles_oob',
+            'fumbles_tot', 'defense_misc_tds',
+            'defense_tkl_loss', 'defense_misc_yds',
+            'passing_sk', 'defense_int', 'puntret_fair',
+            'kickret_fair', 'receiving_yds',
+            'rushing_twoptmissed', 'puntret_tds', 'kicking_xpa',
+            'kicking_fgb', 'defense_sk', 'puntret_tot',
+            'penalty_yds', 'penalty', 'receiving_yac_yds'
         }
 
         self.assertSetEqual(found_columns, expected_columns)

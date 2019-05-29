@@ -14,6 +14,46 @@ class NFLDatabase:
         self.cursor = self.conn.cursor()
         self.cursor.execute('PRAGMA foreign_keys = ON')
 
+        # Hard-coded for speed
+        self._valid_stat_columns = {
+            'punting_touchback', 'receiving_tds', 'punting_blk',
+            'defense_sk_yds', 'kicking_i20', 'kicking_all_yds',
+            'defense_tkl', 'rushing_tds', 'rushing_yds',
+            'receiving_tar', 'passing_cmp', 'kicking_rec',
+            'kicking_fgmissed', 'kicking_fgm_yds',
+            'fumbles_notforced', 'kicking_touchback',
+            'fumbles_lost', 'defense_pass_def',
+            'passing_twoptm', 'kicking_xpmade', 'kickret_ret',
+            'fumbles_forced', 'fumbles_rec', 'kicking_xpb',
+            'punting_tot', 'punting_i20',
+            'defense_tkl_loss_yds', 'defense_frec',
+            'passing_incmp', 'defense_frec_tds',
+            'fumbles_rec_tds', 'passing_incmp_air_yds',
+            'fumbles_rec_yds', 'defense_ffum', 'puntret_yds',
+            'receiving_rec', 'rushing_att', 'passing_att',
+            'kicking_fgm', 'kicking_rec_tds', 'kicking_yds',
+            'rushing_twoptm', 'defense_tkl_primary',
+            'passing_twopta', 'defense_frec_yds',
+            'defense_int_tds', 'defense_xpblk', 'defense_fgblk',
+            'kicking_tot', 'defense_int_yds',
+            'kicking_fgmissed_yds', 'defense_safe',
+            'receiving_twoptm', 'passing_twoptmissed',
+            'passing_int', 'passing_cmp_air_yds',
+            'receiving_twopta', 'defense_qbhit',
+            'kicking_xpmissed', 'passing_yds', 'passing_tds',
+            'kicking_fga', 'defense_puntblk', 'kickret_yds',
+            'defense_ast', 'receiving_twoptmissed',
+            'punting_yds', 'defense_tds', 'passing_sk_yds',
+            'kickret_tds', 'rushing_twopta', 'fumbles_oob',
+            'fumbles_tot', 'defense_misc_tds',
+            'defense_tkl_loss', 'defense_misc_yds',
+            'passing_sk', 'defense_int', 'puntret_fair',
+            'kickret_fair', 'receiving_yds',
+            'rushing_twoptmissed', 'puntret_tds', 'kicking_xpa',
+            'kicking_fgb', 'defense_sk', 'puntret_tot',
+            'penalty_yds', 'penalty', 'receiving_yac_yds'
+        }
+
     def get_table_column_names(self, table_name):
         """
         Return table columns, in order, for table table_name
@@ -167,70 +207,19 @@ class NFLDatabase:
         :return: None
         """
 
-        self.cursor.execute("""
+        query = """
             CREATE TABLE Player_Game_Statistics (
                 player_id CHAR(10) NOT NULL,
-                eid VARCHAR(10) NOT NULL,
-                defense_ast REAL DEFAULT 0,
-                defense_ffum REAL DEFAULT 0,
-                defense_int REAL DEFAULT 0,
-                defense_sk REAL DEFAULT 0,
-                defense_tkl REAL DEFAULT 0,
-                fumbles_lost REAL DEFAULT 0,
-                fumbles_rcv REAL DEFAULT 0,
-                fumbles_tot REAL DEFAULT 0,
-                fumbles_trcv REAL DEFAULT 0,
-                fumbles_yds REAL DEFAULT 0,
-                kicking_fga REAL DEFAULT 0,
-                kicking_fgm REAL DEFAULT 0,
-                kicking_fgyds REAL DEFAULT 0,
-                kicking_totpfg REAL DEFAULT 0,
-                kicking_xpa REAL DEFAULT 0,
-                kicking_xpb REAL DEFAULT 0,
-                kicking_xpmade REAL DEFAULT 0,
-                kicking_xpmissed REAL DEFAULT 0,
-                kicking_xptot REAL DEFAULT 0,
-                kickret_avg REAL DEFAULT 0,
-                kickret_lng REAL DEFAULT 0,
-                kickret_lngtd REAL DEFAULT 0,
-                kickret_ret REAL DEFAULT 0,
-                kickret_tds REAL DEFAULT 0,
-                passing_att REAL DEFAULT 0,
-                passing_cmp REAL DEFAULT 0,
-                passing_ints REAL DEFAULT 0,
-                passing_tds REAL DEFAULT 0,
-                passing_twopta REAL DEFAULT 0,
-                passing_twoptm REAL DEFAULT 0,
-                passing_yds REAL DEFAULT 0,
-                punting_avg REAL DEFAULT 0,
-                punting_i20 REAL DEFAULT 0,
-                punting_lng REAL DEFAULT 0,
-                punting_pts REAL DEFAULT 0,
-                punting_yds REAL DEFAULT 0,
-                puntret_avg REAL DEFAULT 0,
-                puntret_lng REAL DEFAULT 0,
-                puntret_lngtd REAL DEFAULT 0,
-                puntret_ret REAL DEFAULT 0,
-                puntret_tds REAL DEFAULT 0,
-                receiving_lng REAL DEFAULT 0,
-                receiving_lngtd REAL DEFAULT 0,
-                receiving_rec REAL DEFAULT 0,
-                receiving_tds REAL DEFAULT 0,
-                receiving_twopta REAL DEFAULT 0,
-                receiving_twoptm REAL DEFAULT 0,
-                receiving_yds REAL DEFAULT 0,
-                rushing_att REAL DEFAULT 0,
-                rushing_lng REAL DEFAULT 0,
-                rushing_lngtd REAL DEFAULT 0,
-                rushing_tds REAL DEFAULT 0,
-                rushing_twopta REAL DEFAULT 0,
-                rushing_twoptm REAL DEFAULT 0,
-                rushing_yds REAL DEFAULT 0,
-                PRIMARY KEY (player_id, eid),
-                FOREIGN KEY (eid) REFERENCES Games,
-                FOREIGN KEY (player_id) REFERENCES Players 
-            )
-        """)
+                eid VARCHAR(10) NOT NULL, 
+        """
+        for s in self._valid_stat_columns:
+            query += s + ' REAL DEFAULT 0, '
+        query += """
+            PRIMARY KEY (player_id, eid),
+            FOREIGN KEY (eid) REFERENCES Games,
+            FOREIGN KEY (player_id) REFERENCES Players)
+        """
+        self.cursor.execute(query)
         self.commit()
 
     def create_team_game_statistics_table(self):
@@ -243,70 +232,19 @@ class NFLDatabase:
         :return: None
         """
 
-        self.cursor.execute("""
-            CREATE TABLE Team_Game_Statistics (
-                team VARCHAR(3) NOT NULL,
-                eid VARCHAR(10) NOT NULL,
-                defense_ast REAL DEFAULT 0,
-                defense_ffum REAL DEFAULT 0,
-                defense_int REAL DEFAULT 0,
-                defense_sk REAL DEFAULT 0,
-                defense_tkl REAL DEFAULT 0,
-                fumbles_lost REAL DEFAULT 0,
-                fumbles_rcv REAL DEFAULT 0,
-                fumbles_tot REAL DEFAULT 0,
-                fumbles_trcv REAL DEFAULT 0,
-                fumbles_yds REAL DEFAULT 0,
-                kicking_fga REAL DEFAULT 0,
-                kicking_fgm REAL DEFAULT 0,
-                kicking_fgyds REAL DEFAULT 0,
-                kicking_totpfg REAL DEFAULT 0,
-                kicking_xpa REAL DEFAULT 0,
-                kicking_xpb REAL DEFAULT 0,
-                kicking_xpmade REAL DEFAULT 0,
-                kicking_xpmissed REAL DEFAULT 0,
-                kicking_xptot REAL DEFAULT 0,
-                kickret_avg REAL DEFAULT 0,
-                kickret_lng REAL DEFAULT 0,
-                kickret_lngtd REAL DEFAULT 0,
-                kickret_ret REAL DEFAULT 0,
-                kickret_tds REAL DEFAULT 0,
-                passing_att REAL DEFAULT 0,
-                passing_cmp REAL DEFAULT 0,
-                passing_ints REAL DEFAULT 0,
-                passing_tds REAL DEFAULT 0,
-                passing_twopta REAL DEFAULT 0,
-                passing_twoptm REAL DEFAULT 0,
-                passing_yds REAL DEFAULT 0,
-                punting_avg REAL DEFAULT 0,
-                punting_i20 REAL DEFAULT 0,
-                punting_lng REAL DEFAULT 0,
-                punting_pts REAL DEFAULT 0,
-                punting_yds REAL DEFAULT 0,
-                puntret_avg REAL DEFAULT 0,
-                puntret_lng REAL DEFAULT 0,
-                puntret_lngtd REAL DEFAULT 0,
-                puntret_ret REAL DEFAULT 0,
-                puntret_tds REAL DEFAULT 0,
-                receiving_lng REAL DEFAULT 0,
-                receiving_lngtd REAL DEFAULT 0,
-                receiving_rec REAL DEFAULT 0,
-                receiving_tds REAL DEFAULT 0,
-                receiving_twopta REAL DEFAULT 0,
-                receiving_twoptm REAL DEFAULT 0,
-                receiving_yds REAL DEFAULT 0,
-                rushing_att REAL DEFAULT 0,
-                rushing_lng REAL DEFAULT 0,
-                rushing_lngtd REAL DEFAULT 0,
-                rushing_tds REAL DEFAULT 0,
-                rushing_twopta REAL DEFAULT 0,
-                rushing_twoptm REAL DEFAULT 0,
-                rushing_yds REAL DEFAULT 0,
-                PRIMARY KEY (team, eid),
-                FOREIGN KEY (eid) REFERENCES Games,
-                FOREIGN KEY (team) REFERENCES Teams
-            )
-        """)
+        query = """
+                    CREATE TABLE Team_Game_Statistics (
+                        team VARCHAR(3) NOT NULL,
+                        eid VARCHAR(10) NOT NULL, 
+                """
+        for s in self._valid_stat_columns:
+            query += s + ' REAL DEFAULT 0, '
+        query += """
+                    PRIMARY KEY (team, eid),
+                    FOREIGN KEY (eid) REFERENCES Games,
+                    FOREIGN KEY (team) REFERENCES Teams)
+                """
+        self.cursor.execute(query)
         self.commit()
 
     def insert_players(self, players):
@@ -492,27 +430,9 @@ class NFLDatabase:
 
             return
 
-        valid_columns = {
-            'defense_ast', 'defense_ffum', 'defense_int', 'defense_sk',
-            'defense_tkl', 'fumbles_lost', 'fumbles_rcv', 'fumbles_tot',
-            'fumbles_trcv', 'fumbles_yds', 'kicking_fga', 'kicking_fgm',
-            'kicking_fgyds', 'kicking_totpfg', 'kicking_xpa', 'kicking_xpb',
-            'kicking_xpmade', 'kicking_xpmissed', 'kicking_xptot',
-            'kickret_avg', 'kickret_lng', 'kickret_lngtd', 'kickret_ret',
-            'kickret_tds', 'passing_att', 'passing_cmp', 'passing_ints',
-            'passing_tds', 'passing_twopta', 'passing_twoptm', 'passing_yds',
-            'punting_avg', 'punting_i20', 'punting_lng', 'punting_pts',
-            'punting_yds', 'puntret_avg', 'puntret_lng', 'puntret_lngtd',
-            'puntret_ret', 'puntret_tds', 'receiving_lng', 'receiving_lngtd',
-            'receiving_rec', 'receiving_tds', 'receiving_twopta',
-            'receiving_twoptm', 'receiving_yds', 'rushing_att', 'rushing_lng',
-            'rushing_lngtd', 'rushing_tds', 'rushing_twopta', 'rushing_twoptm',
-            'rushing_yds'
-        }
-
         columns = '(player_id, eid, '
         for stat in player_stats.keys():
-            if stat not in valid_columns:
+            if stat not in self._valid_stat_columns:
                 raise RuntimeError(stat + ' is not a valid column in '
                                           'Player_Game_Statistics')
             columns += stat + ', '
@@ -563,27 +483,9 @@ class NFLDatabase:
 
             return
 
-        valid_columns = {
-            'defense_ast', 'defense_ffum', 'defense_int', 'defense_sk',
-            'defense_tkl', 'fumbles_lost', 'fumbles_rcv', 'fumbles_tot',
-            'fumbles_trcv', 'fumbles_yds', 'kicking_fga', 'kicking_fgm',
-            'kicking_fgyds', 'kicking_totpfg', 'kicking_xpa', 'kicking_xpb',
-            'kicking_xpmade', 'kicking_xpmissed', 'kicking_xptot',
-            'kickret_avg', 'kickret_lng', 'kickret_lngtd', 'kickret_ret',
-            'kickret_tds', 'passing_att', 'passing_cmp', 'passing_ints',
-            'passing_tds', 'passing_twopta', 'passing_twoptm', 'passing_yds',
-            'punting_avg', 'punting_i20', 'punting_lng', 'punting_pts',
-            'punting_yds', 'puntret_avg', 'puntret_lng', 'puntret_lngtd',
-            'puntret_ret', 'puntret_tds', 'receiving_lng', 'receiving_lngtd',
-            'receiving_rec', 'receiving_tds', 'receiving_twopta',
-            'receiving_twoptm', 'receiving_yds', 'rushing_att', 'rushing_lng',
-            'rushing_lngtd', 'rushing_tds', 'rushing_twopta', 'rushing_twoptm',
-            'rushing_yds'
-        }
-
         columns = '(team, eid, '
         for stat in team_stats.keys():
-            if stat not in valid_columns:
+            if stat not in self._valid_stat_columns:
                 raise RuntimeError(stat + ' is not a valid column in '
                                           'Team_Game_Statistics')
             columns += stat + ', '
