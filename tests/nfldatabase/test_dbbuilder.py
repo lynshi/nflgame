@@ -110,7 +110,7 @@ class TestNFLdbBuilder(unittest.TestCase):
 
             counter += 1
 
-        self.db.run(reset=False, update=True)
+        self.db.run(update=True)
         for eid, info in nflgame.sched.games.items():
             if info['year'] >= 2019 or info['week'] == 0:
                 continue
